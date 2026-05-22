@@ -6,9 +6,9 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <ma_lio/Pose6D.h>
-#include <sensor_msgs/Imu.h>
-#include <nav_msgs/Odometry.h>
-#include <tf/transform_broadcaster.h>
+#include <sensor_msgs/msg/imu.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 #include <eigen_conversions/eigen_msg.h>
 
 using namespace std;
@@ -49,8 +49,8 @@ struct MeasureGroup // Lidar data and imu dates for the curent process
     std::vector<double> lidar_end_time;
 
     std::vector<PointCloudXYZI::Ptr> lidar_multi;
-    deque<sensor_msgs::Imu::ConstPtr> imu;
-    deque<sensor_msgs::Imu::ConstPtr> imu_cont;
+    deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu;
+    deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_cont;
     pair<Eigen::Quaterniond, Eigen::Vector3d> ext_set;
 };
 

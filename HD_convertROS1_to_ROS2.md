@@ -177,3 +177,45 @@ ros2 launch ma_lio mapping_city.launch.py
 - [ ] Chưa migrate xong toàn bộ source ROS1 API.
 - [ ] Chưa có node player City02 trong repo (mới hướng dẫn kiến trúc chạy).
 
+## 10) Cập nhật tiến trình (2026-05-22)
+
+### Đánh giá nhanh trạng thái ROS2 Jazzy
+- **Chưa chuyển hoàn toàn sang ROS2 Jazzy**.
+- Repository hiện ở trạng thái **hybrid**: một phần đã có ROS2 metadata (ví dụ `MA_LIO/CMakeLists.txt`, `MA_LIO/package.xml`, launch `.launch.py`) nhưng vẫn còn nhiều mã ROS1 API trong source code runtime.
+
+### Các phần đã xử lý trong lượt này
+- ✅ Đã chuyển package message `irp_sen_msgs` từ ROS1/catkin sang ROS2/ament + rosidl:
+  - `irp_sen_msgs/CMakeLists.txt`
+  - `irp_sen_msgs/package.xml`
+
+### Các phần vẫn còn ROS1 API (chưa hoàn tất chuyển đổi)
+1. **`MA_LIO/src/laserMapping.cpp`**
+   - Còn dùng: `#include <ros/ros.h>`, `ros::NodeHandle`, `ros::Publisher`, `ros::Subscriber`, `ros::Rate`, `ros::spinOnce`, `ros::Time`, `tf::TransformBroadcaster`, ROS1 message types/includes.
+2. **`MA_LIO/src/preprocess.h/.cpp`**
+   - Còn dùng `ros::Publisher`, `ros::Time`, kiểu callback ROS1 (`sensor_msgs::PointCloud2::ConstPtr`).
+3. **`MA_LIO/src/parameters.h/.cpp`**
+   - Còn interface `readParameters(ros::NodeHandle&)`.
+4. **`MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`**
+   - Còn dùng kiểu ROS1 message pointer (`sensor_msgs::ImuConstPtr`, `sensor_msgs::Imu::ConstPtr`).
+5. **Package `file_player`**
+   - Còn nguyên ROS1 stack (`catkin`, `dynamic_reconfigure`, `ros::...`, `rosbag`, `.launch` ROS1).
+
+### Kết luận tiến độ hiện tại
+- Chuyển đổi ROS2 Jazzy **mới hoàn tất cho `irp_sen_msgs`** trong lượt này.
+- Phần runtime chính (`MA_LIO`) và tool (`file_player`) **vẫn cần port tiếp** để đạt mục tiêu “hoàn toàn ROS2”.
+
+## 11) Cập nhật tiến trình (2026-05-22 - vòng 2)
+
+### Đã migrate thêm sang ROS2 API
+- `MA_LIO/src/parameters.h`: đổi interface đọc tham số sang `readParameters(rclcpp::Node::SharedPtr)`.
+- `MA_LIO/src/parameters.cpp`: bỏ `ros::NodeHandle::param`, chuyển sang `declare_parameter` + `get_parameter` của ROS2.
+- `MA_LIO/src/preprocess.h/.cpp`, `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: chuyển include/kiểu message chính sang ROS2 (`sensor_msgs::msg::*`, `rclcpp`, pointer `ConstSharedPtr`).
+
+### Phần còn dùng ROS1 API
+- `MA_LIO/src/laserMapping.cpp`: còn nhiều API ROS1 runtime (`ros::init`, `ros::NodeHandle`, `ros::Publisher/Subscriber`, `ros::spinOnce`, `ros::Rate`, `ros::Time`, `tf::TransformBroadcaster`).
+- `file_player/*`: vẫn là package ROS1/catkin hoàn chỉnh.
+
+### Kết luận hiện tại
+- Chưa thể xem là migrate ROS2 Jazzy hoàn toàn cho toàn repo.
+- Các thành phần interface/message đã tiến gần ROS2 hơn, nhưng cần port tiếp `laserMapping.cpp` và `file_player` để hoàn tất.
+

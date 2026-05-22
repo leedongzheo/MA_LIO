@@ -1,17 +1,31 @@
-cmake_minimum_required(VERSION 2.8.3)
-
+cmake_minimum_required(VERSION 3.8)
 project(irp_sen_msgs)
-if (NOT CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE RelWithDebInfo)
-endif ()
-find_package(catkin REQUIRED COMPONENTS message_generation std_msgs geometry_msgs sensor_msgs
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+set(msg_files
+  "msg/Inspva.msg"
+  "msg/LaserScanArray.msg"
+  "msg/altimeter.msg"
+  "msg/fog_3axis.msg"
+  "msg/imu.msg"
+  "msg/fog.msg"
+  "msg/encoder.msg"
+  "msg/vrs.msg"
 )
 
-add_message_files(
-  DIRECTORY msg
+rosidl_generate_interfaces(${PROJECT_NAME}
+  ${msg_files}
+  DEPENDENCIES std_msgs geometry_msgs sensor_msgs
 )
-generate_messages(DEPENDENCIES std_msgs geometry_msgs sensor_msgs)
 
-catkin_package(
-  CATKIN_DEPENDS message_runtime std_msgs geometry_msgs sensor_msgs
-)
+ament_export_dependencies(rosidl_default_runtime)
+ament_package()
