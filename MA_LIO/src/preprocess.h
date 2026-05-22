@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <livox_ros_driver/CustomMsg.h>
@@ -63,7 +63,7 @@ class Preprocess
   ~Preprocess();
   
   void process(const livox_ros_driver::CustomMsg::ConstPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
-  void process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
+  void process(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
 
   // sensor_msgs::PointCloud2::ConstPtr pointcloud;
   PointCloudXYZI pl_full, pl_corn, pl_surf;
@@ -75,14 +75,14 @@ class Preprocess
   std::vector<int> lid_type;
   double blind;
   bool given_offset_time;
-  ros::Publisher pub_full, pub_surf, pub_corn;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_full, pub_surf, pub_corn;
   double maximum_time;
     
 
   private:
   void avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg, int lidar);
-  void oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg, int lidar);
-  void velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg, int lidar);
-  void pub_func(PointCloudXYZI &pl, const ros::Time &ct);
+  void oust64_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar);
+  void velodyne_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar);
+  void pub_func(PointCloudXYZI &pl, const rclcpp::Time &ct);
   
 };

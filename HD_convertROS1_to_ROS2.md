@@ -183,8 +183,8 @@ City02/
 
 ## 9) Tồn đọng ROS1 cần theo dõi tiếp (checklist sống)
 - [ ] `MA_LIO/src/laserMapping.cpp`: bỏ `ros::` + `tf::` ROS1.
-- [ ] `MA_LIO/src/preprocess.*`: đổi callback/publisher/time sang ROS2.
-- [ ] `MA_LIO/src/parameters.*`: đổi interface đọc param sang `rclcpp::Node`.
+- [x] `MA_LIO/src/preprocess.*`: đã đổi kiểu `PointCloud2`, `Publisher`, `Time` sang ROS2 (`sensor_msgs::msg`, `rclcpp`).
+- [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
 - [ ] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: bỏ pointer typedef ROS1.
 - [ ] `file_player/*`: port toàn bộ từ catkin/rosbag/dynamic_reconfigure sang ROS2 hoặc thay bằng `city02_player_py`.
 - [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
@@ -192,6 +192,8 @@ City02/
 ---
 
 ## 10) Log tiến độ (2026-05-22)
+- ✅ `MA_LIO/src/parameters.*` đã chuyển sang API parameter ROS2 (`rclcpp::Node`).
+- ✅ `MA_LIO/src/preprocess.*` đã chuyển các kiểu ROS1 `PointCloud2/Publisher/Time` sang ROS2.
 - ✅ `irp_sen_msgs` đã sang ROS2 (ament + rosidl).
 - ✅ Đã có player ROS2 cho City02: `city02_player_py`.
 - ✅ Đã thêm launch gộp `city02_mapping.launch.py` để chạy player + thuật toán cùng lúc.
