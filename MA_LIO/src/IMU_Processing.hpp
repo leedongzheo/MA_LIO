@@ -6,7 +6,7 @@
 #include <thread>
 #include <fstream>
 #include <csignal>
-#include <ros/ros.h>
+
 #include <so3_math.h>
 #include <Eigen/Eigen>
 #include <common_lib.h>
@@ -14,15 +14,15 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <condition_variable>
-#include <nav_msgs/Odometry.h>
+#include <nav_msgs/msg/odometry.hpp>
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
-#include <tf/transform_broadcaster.h>
-#include <eigen_conversions/eigen_msg.h>
+
+
 #include <pcl_conversions/pcl_conversions.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <geometry_msgs/Vector3.h>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 #include "use-ikfom.hpp"
 #include "BsplineSE3.h"
 #include "associate_uct.hpp"
@@ -43,7 +43,7 @@ public:
   ~ImuProcess();
 
   void Reset();
-  void Reset(double start_timestamp, const sensor_msgs::ImuConstPtr &lastimu);
+  void Reset(double start_timestamp, const sensor_msgs::msg::Imu::ConstSharedPtr &lastimu);
   void set_gyr_cov(const V3D &scaler);
   void set_acc_cov(const V3D &scaler);
   void set_gyr_bias_cov(const V3D &b_g);
@@ -73,8 +73,8 @@ private:
   PointCloudXYZI::Ptr cur_pcl_un_2_;
   PointCloudXYZI::Ptr cur_pcl_un_3_;
 
-  sensor_msgs::ImuConstPtr last_imu_;
-  deque<sensor_msgs::ImuConstPtr> v_imu_;
+  sensor_msgs::msg::Imu::ConstSharedPtr last_imu_;
+  deque<sensor_msgs::msg::Imu::ConstSharedPtr> v_imu_;
   vector<Pose6D> IMUpose;
 
   M3D Lidar_R_wrt_IMU;
@@ -105,7 +105,7 @@ ImuProcess::ImuProcess()
   angvel_last = Zero3d;
   Lidar_T_wrt_IMU = Zero3d;
   Lidar_R_wrt_IMU = Eye3d;
-  last_imu_.reset(new sensor_msgs::Imu());
+  last_imu_ = std::make_shared<sensor_msgs::msg::Imu>();
 }
 
 ImuProcess::~ImuProcess() {}
@@ -120,7 +120,7 @@ void ImuProcess::Reset()
   start_timestamp_ = -1;
   init_iter_num = 1;
   v_imu_.clear();
-  last_imu_.reset(new sensor_msgs::Imu());
+  last_imu_ = std::make_shared<sensor_msgs::msg::Imu>();
   cur_pcl_un_.reset(new PointCloudXYZI());
 }
 

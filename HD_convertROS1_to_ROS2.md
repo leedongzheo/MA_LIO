@@ -185,7 +185,7 @@ City02/
 - [ ] `MA_LIO/src/laserMapping.cpp`: bỏ `ros::` + `tf::` ROS1.
 - [x] `MA_LIO/src/preprocess.*`: đã đổi kiểu `PointCloud2`, `Publisher`, `Time` sang ROS2 (`sensor_msgs::msg`, `rclcpp`).
 - [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
-- [ ] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: bỏ pointer typedef ROS1.
+- [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung.
 - [ ] `file_player/*`: port toàn bộ từ catkin/rosbag/dynamic_reconfigure sang ROS2 hoặc thay bằng `city02_player_py`.
 - [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
 
@@ -197,4 +197,5 @@ City02/
 - ✅ `irp_sen_msgs` đã sang ROS2 (ament + rosidl).
 - ✅ Đã có player ROS2 cho City02: `city02_player_py`.
 - ✅ Đã thêm launch gộp `city02_mapping.launch.py` để chạy player + thuật toán cùng lúc.
-- ⚠️ `ma_lio` C++ runtime vẫn còn ROS1 API nên chưa thể coi là chuyển đổi hoàn toàn.
+- ✅ Đã tiếp tục dọn ROS1 API trong `IMU_Processing.hpp` và `common_lib.h` (đổi kiểu con trỏ IMU + include message ROS2).
+- ⚠️ `MA_LIO/src/laserMapping.cpp` và `file_player/*` vẫn còn ROS1 API nên chưa thể coi là chuyển đổi hoàn toàn.
