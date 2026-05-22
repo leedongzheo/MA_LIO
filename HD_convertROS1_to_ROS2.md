@@ -182,7 +182,7 @@ City02/
 ---
 
 ## 9) Tồn đọng ROS1 cần theo dõi tiếp (checklist sống)
-- [ ] `MA_LIO/src/laserMapping.cpp`: bỏ `ros::` + `tf::` ROS1.
+- [x] `MA_LIO/src/laserMapping.cpp`: đã bỏ `ros::` + `tf::` ROS1, chuyển sang `rclcpp` + `tf2_ros::TransformBroadcaster`.
 - [x] `MA_LIO/src/preprocess.*`: đã đổi kiểu `PointCloud2`, `Publisher`, `Time` sang ROS2 (`sensor_msgs::msg`, `rclcpp`).
 - [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
 - [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung.
@@ -198,4 +198,6 @@ City02/
 - ✅ Đã có player ROS2 cho City02: `city02_player_py`.
 - ✅ Đã thêm launch gộp `city02_mapping.launch.py` để chạy player + thuật toán cùng lúc.
 - ✅ Đã tiếp tục dọn ROS1 API trong `IMU_Processing.hpp` và `common_lib.h` (đổi kiểu con trỏ IMU + include message ROS2).
-- ⚠️ `MA_LIO/src/laserMapping.cpp` và `file_player/*` vẫn còn ROS1 API nên chưa thể coi là chuyển đổi hoàn toàn.
+- ⚠️ `file_player/*` vẫn còn ROS1 API (catkin/roscpp/rosbag/dynamic_reconfigure) nên toàn repo chưa chuyển đổi hoàn toàn.
+
+- ✅ `MA_LIO/src/laserMapping.cpp` đã đổi sang ROS2 API: `rclcpp::Node`, `rclcpp::Publisher/Subscription`, `rclcpp::Time`, `rclcpp::spin_some`, và TF broadcaster ROS2 (`tf2_ros`).
