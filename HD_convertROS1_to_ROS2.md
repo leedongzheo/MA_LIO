@@ -96,9 +96,9 @@ Các điểm ROS1 được phát hiện:
 
 ---
 
-## 6) Cách build package MA_LIO trên ROS2 Jazzy
+## 6) Build ROS2 Jazzy trên Ubuntu 24.04 (khuyến nghị thực tế)
 
-### 6.1 Cài dependency cơ bản
+### 6.1 Cài dependency
 ```bash
 sudo apt update
 sudo apt install -y \
@@ -107,129 +107,11 @@ sudo apt install -y \
   ros-jazzy-pcl-msgs \
   ros-jazzy-tf2-ros \
   ros-jazzy-message-filters \
+  ros-jazzy-rosidl-default-generators \
   libpcl-dev libeigen3-dev
 ```
 
 ### 6.2 Build workspace
-Giả sử bạn đặt repo ở workspace ROS2:
-```bash
-source /opt/ros/jazzy/setup.bash
-cd <ros2_ws>
-colcon build --symlink-install --packages-select ma_lio
-source install/setup.bash
-```
-
-> Nếu build fail do API ROS1 còn sót: xem mục 4 để migrate tiếp từng file.
-
----
-
-## 7) Chạy launch thuật toán trên ROS2
-```bash
-source /opt/ros/jazzy/setup.bash
-source <ros2_ws>/install/setup.bash
-ros2 launch ma_lio mapping_city.launch.py
-```
-
----
-
-## 8) Phát dataset City02 bằng ROS2 (không dùng rosbag có sẵn)
-
-Vì dataset hiện là file nhị phân + CSV timestamp, chưa phải `.db3` rosbag2, cách nhanh nhất là viết **publisher node** phát:
-- `/ouster_points` từ `City02/sensor_data/ouster/*.bin` + `ouster_stamp.csv`
-- `/livox_avia_points` từ `City02/sensor_data/Livox_avia/*.bin` + `data_stamp.csv`
-- `/livox_tele_points` từ `City02/sensor_data/Livox_tele/*.bin` + `data_stamp.csv`
-- `/imu/data` từ `xsens_imu.csv`
-
-### 8.1 Luồng node publisher khuyến nghị
-1. Parse CSV timestamp.
-2. Sắp event theo thời gian toàn cục.
-3. Theo clock thực (`rclcpp::Clock`) phát tuần tự event.
-4. Convert `.bin` -> `sensor_msgs::msg::PointCloud2` (XYZI).
-5. Convert IMU CSV -> `sensor_msgs::msg::Imu`.
-
-### 8.2 Khung lệnh chạy
-```bash
-# terminal 1
-ros2 run <dataset_player_pkg> city02_player_node \
-  --ros-args \
-  -p root:=/path/to/City02/sensor_data \
-  -p rate:=1.0
-
-# terminal 2
-ros2 launch ma_lio mapping_city.launch.py
-```
-
----
-
-## 9) Khuyến nghị hoàn tất migration (giai đoạn 2)
-1. Refactor `laserMapping.cpp` thành class node ROS2 (`MaLioMappingNode`).
-2. Chuyển toàn bộ tf ROS1 sang tf2_ros.
-3. Chuẩn hóa message input LiDAR về `sensor_msgs/msg/PointCloud2` để bỏ phụ thuộc mạnh vào ROS1 livox msg.
-4. Update `preprocess.*` callback + publish API ROS2.
-5. Chạy test replay City02 (rate 0.5x -> 1.0x -> 2.0x).
-6. Xuất checklist pass/fail từng topic (Hz, frame_id, timestamp monotonic).
-
----
-
-## 10) Trạng thái hiện tại
-- [x] Có tài liệu migration theo dõi tiến trình.
-- [x] Có khung build ROS2 (CMake/package/launch).
-- [ ] Chưa migrate xong toàn bộ source ROS1 API.
-- [ ] Chưa có node player City02 trong repo (mới hướng dẫn kiến trúc chạy).
-
-## 10) Cập nhật tiến trình (2026-05-22)
-
-### Đánh giá nhanh trạng thái ROS2 Jazzy
-- **Chưa chuyển hoàn toàn sang ROS2 Jazzy**.
-- Repository hiện ở trạng thái **hybrid**: một phần đã có ROS2 metadata (ví dụ `MA_LIO/CMakeLists.txt`, `MA_LIO/package.xml`, launch `.launch.py`) nhưng vẫn còn nhiều mã ROS1 API trong source code runtime.
-
-### Các phần đã xử lý trong lượt này
-- ✅ Đã chuyển package message `irp_sen_msgs` từ ROS1/catkin sang ROS2/ament + rosidl:
-  - `irp_sen_msgs/CMakeLists.txt`
-  - `irp_sen_msgs/package.xml`
-
-### Các phần vẫn còn ROS1 API (chưa hoàn tất chuyển đổi)
-1. **`MA_LIO/src/laserMapping.cpp`**
-   - Còn dùng: `#include <ros/ros.h>`, `ros::NodeHandle`, `ros::Publisher`, `ros::Subscriber`, `ros::Rate`, `ros::spinOnce`, `ros::Time`, `tf::TransformBroadcaster`, ROS1 message types/includes.
-2. **`MA_LIO/src/preprocess.h/.cpp`**
-   - Còn dùng `ros::Publisher`, `ros::Time`, kiểu callback ROS1 (`sensor_msgs::PointCloud2::ConstPtr`).
-3. **`MA_LIO/src/parameters.h/.cpp`**
-   - Còn interface `readParameters(ros::NodeHandle&)`.
-4. **`MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`**
-   - Còn dùng kiểu ROS1 message pointer (`sensor_msgs::ImuConstPtr`, `sensor_msgs::Imu::ConstPtr`).
-5. **Package `file_player`**
-   - Còn nguyên ROS1 stack (`catkin`, `dynamic_reconfigure`, `ros::...`, `rosbag`, `.launch` ROS1).
-
-### Kết luận tiến độ hiện tại
-- Chuyển đổi ROS2 Jazzy **mới hoàn tất cho `irp_sen_msgs`** trong lượt này.
-- Phần runtime chính (`MA_LIO`) và tool (`file_player`) **vẫn cần port tiếp** để đạt mục tiêu “hoàn toàn ROS2”.
-
-
-## 11) Cập nhật tiến trình (2026-05-22, lượt tiếp theo)
-
-### 11.1 Đã bổ sung ROS2 dataset player cho City02
-Đã thêm package mới `city02_player_py` (ROS2 Jazzy, `ament_python`) để replay trực tiếp cấu trúc:
-
-```text
-City02/sensor_data/
-├── ouster/*.bin
-├── Livox_avia/*.bin
-├── Livox_tele/*.bin
-├── xsens_imu.csv
-├── data_stamp.csv
-└── ouster_stamp.csv
-```
-
-Node `city02_player_node` publish các topic:
-- `/ouster_points` (`sensor_msgs/msg/PointCloud2`)
-- `/livox_avia_points` (`sensor_msgs/msg/PointCloud2`)
-- `/livox_tele_points` (`sensor_msgs/msg/PointCloud2`)
-- `/imu/data` (`sensor_msgs/msg/Imu`)
-
-Có launch file ROS2:
-- `ros2 launch city02_player_py city02_player.launch.py root:=/abs/path/City02/sensor_data rate:=1.0`
-
-### 11.2 Cách build toàn bộ để chạy MA_LIO + player
 ```bash
 source /opt/ros/jazzy/setup.bash
 cd <ros2_ws>
@@ -237,13 +119,19 @@ colcon build --symlink-install --packages-select irp_sen_msgs ma_lio city02_play
 source install/setup.bash
 ```
 
-### 11.3 Chạy thực nghiệm City02 trên ROS2
-Terminal 1 (phát dataset):
+> Nếu build fail tại `ma_lio`, nguyên nhân thường do API ROS1 còn trong mã C++ (xem mục 4).
+
+---
+
+## 7) Chạy thuật toán + dataset City02 bằng ROS2
+
+### 7.1 Chạy riêng từng launch
+Terminal 1 (player City02):
 ```bash
 source /opt/ros/jazzy/setup.bash
 source <ros2_ws>/install/setup.bash
 ros2 launch city02_player_py city02_player.launch.py \
-  root:=/abs/path/City02/sensor_data rate:=1.0
+  root:=/path/to/City02/sensor_data rate:=1.0
 ```
 
 Terminal 2 (MA_LIO):
@@ -253,17 +141,58 @@ source <ros2_ws>/install/setup.bash
 ros2 launch ma_lio mapping_city.launch.py
 ```
 
-### 11.4 Tồn đọng ROS1 API (vẫn còn, cần port tiếp)
-Các API ROS1 vẫn xuất hiện trong runtime chính `MA_LIO`:
-- `ros::init`, `ros::NodeHandle`, `ros::Publisher`, `ros::Subscriber`
-- `ros::spinOnce`, `ros::Rate`, `ros::Time`
-- `ROS_INFO`, `ROS_WARN`
-- `tf::TransformBroadcaster` (tf ROS1)
-- callback kiểu `ConstPtr` ROS1 trong nhiều file (`laserMapping.cpp`, `preprocess.*`, `parameters.*`, `IMU_Processing.hpp`)
+### 7.2 Chạy launch gộp (mới thêm)
+Đã thêm `MA_LIO/launch/city02_mapping.launch.py` để chạy đồng thời:
+- node `city02_player_py/city02_player_node`
+- node `ma_lio/malio_mapping`
 
-### 11.5 Gợi ý bước kế tiếp
-1. Port `laserMapping.cpp` thành class node ROS2 (`rclcpp::Node`).
-2. Thay `tf` ROS1 bằng `tf2_ros::TransformBroadcaster` + `geometry_msgs/msg/TransformStamped`.
-3. Chuyển callback và publisher/subscriber ở `preprocess.*` sang ROS2 signatures.
-4. Đổi `readParameters(ros::NodeHandle&)` sang đọc tham số kiểu ROS2 (`declare/get_parameter`).
-5. Chuẩn hóa đầu vào LiDAR về `sensor_msgs/msg/PointCloud2` để tránh phụ thuộc `livox_ros_driver/CustomMsg` ROS1.
+Lệnh:
+```bash
+source /opt/ros/jazzy/setup.bash
+source <ros2_ws>/install/setup.bash
+ros2 launch ma_lio city02_mapping.launch.py \
+  city02_root:=/path/to/City02/sensor_data \
+  rate:=1.0
+```
+
+---
+
+## 8) Mô tả dataset City02 hiện tại
+
+Cấu trúc đầu vào:
+```text
+City02/
+└── sensor_data/
+   ├── ouster/
+   ├── Livox_avia/
+   ├── Livox_tele/
+   ├── xsens_imu.csv
+   ├── data_stamp.csv
+   └── ouster_stamp.csv
+```
+
+- `ouster/*.bin`, `Livox_avia/*.bin`, `Livox_tele/*.bin` được replay thành `sensor_msgs/msg/PointCloud2`.
+- `xsens_imu.csv` được replay thành `sensor_msgs/msg/Imu`.
+- Topic mặc định:
+  - `/ouster_points`
+  - `/livox_avia_points`
+  - `/livox_tele_points`
+  - `/imu/data`
+
+---
+
+## 9) Tồn đọng ROS1 cần theo dõi tiếp (checklist sống)
+- [ ] `MA_LIO/src/laserMapping.cpp`: bỏ `ros::` + `tf::` ROS1.
+- [ ] `MA_LIO/src/preprocess.*`: đổi callback/publisher/time sang ROS2.
+- [ ] `MA_LIO/src/parameters.*`: đổi interface đọc param sang `rclcpp::Node`.
+- [ ] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: bỏ pointer typedef ROS1.
+- [ ] `file_player/*`: port toàn bộ từ catkin/rosbag/dynamic_reconfigure sang ROS2 hoặc thay bằng `city02_player_py`.
+- [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
+
+---
+
+## 10) Log tiến độ (2026-05-22)
+- ✅ `irp_sen_msgs` đã sang ROS2 (ament + rosidl).
+- ✅ Đã có player ROS2 cho City02: `city02_player_py`.
+- ✅ Đã thêm launch gộp `city02_mapping.launch.py` để chạy player + thuật toán cùng lúc.
+- ⚠️ `ma_lio` C++ runtime vẫn còn ROS1 API nên chưa thể coi là chuyển đổi hoàn toàn.
