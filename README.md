@@ -38,7 +38,7 @@ We are delighted to release our code, MA-LIO. This is the initial release, and a
 The code is tested on:
 
 * Linux 20.04 LTS
-* ROS Noetic
+* ROS 2 Jazzy
 
 ### 1.1. Livox_ros_driver
 
@@ -49,10 +49,11 @@ To install livox_ros_driver2, please follow the [Livox ROS2 Driver Installation]
 To download and compile the package, use the following commands:
 
 ```bash
-cd ~/catkin_ws/src
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
 git clone https://github.com/minwoo0611/MA-LIO.git
-cd ..
-catkin build
+cd ~/ros2_ws
+colcon build --symlink-install
 ```
 
 ## 3. Launch MA-LIO
@@ -104,7 +105,7 @@ sync->registerCallback(boost::bind(&lidar_cbk_, _1, _2));
 Users will need to adjust both the input and internals of the function to suit their requirements. Here is what the initial code looks like:
 
 ```cpp
-void lidar_cbk_(const sensor_msgs::PointCloud2::ConstPtr &scanMsg_,
+void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &scanMsg_,
                 const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg_, const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg2_)
 {
     standard_pcl_cbk(scanMsg_, 0);
@@ -116,7 +117,7 @@ void lidar_cbk_(const sensor_msgs::PointCloud2::ConstPtr &scanMsg_,
 For instance, user can change the input like this:
 
 ```cpp
-void lidar_cbk_(const sensor_msgs::PointCloud2::ConstPtr &scanMsg_,
+void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &scanMsg_,
                 const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg_)
 ```
 
@@ -172,7 +173,7 @@ MTK_BUILD_MANIFOLD(state_ikfom,
 After making the corresponding modifications, you can build and launch as follows:
 
 ```bash
-roslaunch ma_lio mapping_user.launch
+ros2 launch ma_lio mapping_user.launch.py
 ```
 
 If the modification was successful, you can check the following RViz output:
@@ -229,8 +230,8 @@ Furthermore, the extrinsic transformation between the IMU and LiDAR sensors can 
 
 To utilize the dataset, please follow these instructions:
 ```
-source devel/setup.bash
-roslaunch file_player file_player.launch
+source install/setup.bash
+ros2 launch file_player file_player.launch.py
 ```
 - Click the "Load" button and navigate to the "City0x" folder.
 - Select the "Open" button, followed by the "Play" button.
