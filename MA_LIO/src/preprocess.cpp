@@ -11,7 +11,7 @@ Preprocess::Preprocess()
 
 Preprocess::~Preprocess() {}
 
-void Preprocess::process(const livox_ros_driver::CustomMsg::ConstPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar)
+void Preprocess::process(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar)
 {
   avia_handler(msg, lidar);
   *pcl_out = pl_surf;
@@ -56,7 +56,7 @@ void Preprocess::process(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &ms
   *pcl_out = pl_surf;
 }
 
-void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg, int lidar)
+void Preprocess::avia_handler(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, int lidar)
 {
   pl_surf.clear();
   pl_corn.clear();

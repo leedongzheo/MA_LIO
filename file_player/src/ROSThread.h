@@ -82,7 +82,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <livox_ros_driver/msg/custom_msg.hpp>
+#include <livox_ros_driver2/msg/custom_msg.hpp>
 
 using namespace std;
 using namespace cv;
@@ -154,8 +154,8 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr magnet_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr velodyne_left_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr velodyne_right_pub_;
-    rclcpp::Publisher<livox_ros_driver::msg::CustomMsg>::SharedPtr livox_avia_pub_;
-    rclcpp::Publisher<livox_ros_driver::msg::CustomMsg>::SharedPtr livox_tele_pub_;
+    rclcpp::Publisher<livox_ros_driver2::msg::CustomMsg>::SharedPtr livox_avia_pub_;
+    rclcpp::Publisher<livox_ros_driver2::msg::CustomMsg>::SharedPtr livox_tele_pub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr ouster_pub_;
 
     rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
@@ -214,8 +214,8 @@ private:
 
     pair<string,sensor_msgs::msg::PointCloud2> velodyne_left_next_;
     pair<string,sensor_msgs::msg::PointCloud2> velodyne_right_next_;
-    pair<string,livox_ros_driver::msg::CustomMsg> livox_avia_next_;
-    pair<string,livox_ros_driver::msg::CustomMsg> livox_tele_next_;
+    pair<string,livox_ros_driver2::msg::CustomMsg> livox_avia_next_;
+    pair<string,livox_ros_driver2::msg::CustomMsg> livox_tele_next_;
 
     int GetDirList(string dir, vector<string> &files);
 

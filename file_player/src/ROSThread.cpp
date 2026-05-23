@@ -115,8 +115,8 @@ void ROSThread::ros_initialize(const rclcpp::Node::SharedPtr &node)
   //velodyne_left_pub_ = node_->advertise<sensor_msgs::msg::PointCloud2>("/ns3/velodyne_points", 1000);
   //velodyne_right_pub_ = node_->advertise<sensor_msgs::msg::PointCloud2>("/ns2/velodyne_points", 1000);
 
-  livox_avia_pub_ = node_->create_publisher<livox_ros_driver::msg::CustomMsg>("/livox/avia/points", 1000);
-  livox_tele_pub_ = node_->create_publisher<livox_ros_driver::msg::CustomMsg>("/livox/tele/points", 1000);
+  livox_avia_pub_ = node_->create_publisher<livox_ros_driver2::msg::CustomMsg>("/livox/avia/points", 1000);
+  livox_tele_pub_ = node_->create_publisher<livox_ros_driver2::msg::CustomMsg>("/livox/tele/points", 1000);
   ouster_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/os_cloud_node/points", 10000);
 
 
@@ -771,14 +771,14 @@ void ROSThread::LivoxAviaThread()
       }else{
 //        cout << "Re-load right velodyne from path" << endl;
         //load current data
-        livox_ros_driver::msg::CustomMsg livox_msg;
+        livox_ros_driver2::msg::CustomMsg livox_msg;
         string current_file_name = data_folder_path_ + "/sensor_data/Livox_avia" +"/"+ to_string(data) + ".bin";
         int i = 0;
         if(1){
             ifstream file;
             file.open(current_file_name, ios::in|ios::binary);
             while(!file.eof()){
-                livox_ros_driver::CustomPoint point;
+                livox_ros_driver2::msg::CustomPoint point;
                 file.read(reinterpret_cast<char *>(&point.x), sizeof(float));
                 file.read(reinterpret_cast<char *>(&point.y), sizeof(float));
                 file.read(reinterpret_cast<char *>(&point.z), sizeof(float));
@@ -800,7 +800,7 @@ void ROSThread::LivoxAviaThread()
       }
 
       //load next data
-      livox_ros_driver::msg::CustomMsg livox_msg;
+      livox_ros_driver2::msg::CustomMsg livox_msg;
       current_file_index = find(next(livox_avia_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_avia_file_list_.end(),to_string(data)+".bin") - livox_avia_file_list_.begin();
       if(find(next(livox_avia_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_avia_file_list_.end(),livox_avia_file_list_[current_file_index+1]) != livox_avia_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/Livox_avia" +"/"+ livox_avia_file_list_[current_file_index+1];
@@ -808,7 +808,7 @@ void ROSThread::LivoxAviaThread()
           file.open(next_file_name, ios::in|ios::binary);
           int i = 0;
           while(!file.eof()){
-              livox_ros_driver::CustomPoint point;
+              livox_ros_driver2::msg::CustomPoint point;
               file.read(reinterpret_cast<char *>(&point.x), sizeof(float));
               file.read(reinterpret_cast<char *>(&point.y), sizeof(float));
               file.read(reinterpret_cast<char *>(&point.z), sizeof(float));
@@ -855,14 +855,14 @@ void ROSThread::LivoxTeleThread()
         livox_tele_pub_.publish(livox_tele_next_.second);
       }else{
         //load current data
-        livox_ros_driver::msg::CustomMsg livox_msg;
+        livox_ros_driver2::msg::CustomMsg livox_msg;
         string current_file_name = data_folder_path_ + "/sensor_data/Livox_tele" +"/"+ to_string(data) + ".bin";
         int i = 0;
         if(1){
             ifstream file;
             file.open(current_file_name, ios::in|ios::binary);
             while(!file.eof()){
-                livox_ros_driver::CustomPoint point;
+                livox_ros_driver2::msg::CustomPoint point;
                 file.read(reinterpret_cast<char *>(&point.x), sizeof(float));
                 file.read(reinterpret_cast<char *>(&point.y), sizeof(float));
                 file.read(reinterpret_cast<char *>(&point.z), sizeof(float));
@@ -884,7 +884,7 @@ void ROSThread::LivoxTeleThread()
       }
 
       //load next data
-      livox_ros_driver::msg::CustomMsg livox_msg;
+      livox_ros_driver2::msg::CustomMsg livox_msg;
       current_file_index = find(next(livox_tele_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_tele_file_list_.end(),to_string(data)+".bin") - livox_tele_file_list_.begin();
       if(find(next(livox_tele_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_tele_file_list_.end(),livox_tele_file_list_[current_file_index+1]) != livox_tele_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/Livox_tele" +"/"+ livox_tele_file_list_[current_file_index+1];
@@ -892,7 +892,7 @@ void ROSThread::LivoxTeleThread()
           file.open(next_file_name, ios::in|ios::binary);
           int i = 0;
           while(!file.eof()){
-              livox_ros_driver::CustomPoint point;
+              livox_ros_driver2::msg::CustomPoint point;
               file.read(reinterpret_cast<char *>(&point.x), sizeof(float));
               file.read(reinterpret_cast<char *>(&point.y), sizeof(float));
               file.read(reinterpret_cast<char *>(&point.z), sizeof(float));
