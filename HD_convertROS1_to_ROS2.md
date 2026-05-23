@@ -50,7 +50,7 @@ Các điểm ROS1 được phát hiện:
 
 ### 4.1 Trong `MA_LIO/src/laserMapping.cpp`
 - Header ROS1:
-  - `#include <ros/ros.h>`
+  - `#include <rclcpp/rclcpp.hpp>`
   - `#include <tf/transform_datatypes.h>`
   - `#include <tf/transform_broadcaster.h>`
 - ROS1 runtime:
@@ -63,7 +63,7 @@ Các điểm ROS1 được phát hiện:
   - `tf::TransformBroadcaster`, `tf::Transform`, `tf::Quaternion`.
 
 ### 4.2 Trong `MA_LIO/src/preprocess.h` và `MA_LIO/src/preprocess.cpp`
-- `#include <ros/ros.h>`.
+- `#include <rclcpp/rclcpp.hpp>`.
 - `ros::Publisher` members.
 - callback signatures dùng `ConstPtr` kiểu ROS1.
 - `ros::Time` trong hàm publish.
@@ -206,3 +206,32 @@ City02/
 ## 11) Log tiến độ (2026-05-23)
 - ✅ Đã thay nốt macro ROS1 còn sót trong `MA_LIO/src/IMU_Processing.hpp`: `ROS_INFO("IMU Initial Done")` -> `RCLCPP_INFO(rclcpp::get_logger("ImuProcess"), ...)`.
 - ⚠️ `file_player/*` vẫn là cụm ROS1 lớn (catkin + roscpp + rosbag + dynamic_reconfigure), cần một nhánh port riêng để chuyển trọn sang ROS2 Jazzy.
+
+## Cập nhật tiến trình (2026-05-23)
+
+### Kết quả rà soát ROS1 còn sót lại
+Đã rà soát lại toàn bộ repo bằng pattern `ros::`, `roscpp`, `rospy`, `NodeHandle`, `ros::Time`, `ros::Publisher`, `ros::Subscriber`.
+
+Các vị trí còn API ROS1 tập trung trong module `file_player`:
+- `file_player/src/main.cpp`: `ros::init`, `ros::NodeHandle`.
+- `file_player/src/mainwindow.h`, `file_player/src/mainwindow.cpp`: hàm `RosInit(ros::NodeHandle&)`.
+- `file_player/src/ROSThread.h`, `file_player/src/ROSThread.cpp`:
+  - `ros::NodeHandle`, `ros::Publisher`, `ros::Subscriber`, `ros::Timer`.
+  - `ros::Time::now()`, `ros::AsyncSpinner`, `ros::waitForShutdown()`.
+- `file_player/CMakeLists.txt`, `file_player/package.xml`: vẫn dùng `catkin`, `roscpp`, `rospy`.
+
+### Trạng thái
+- `MA_LIO` core đã ROS2.
+- `file_player` vẫn là cụm ROS1 độc lập và là phần chặn cuối để “chuyển hết hoàn toàn sang ROS2 Jazzy”.
+
+### Kế hoạch port dứt điểm `file_player` (ROS2 Jazzy)
+1. Đổi build system `catkin` -> `ament_cmake`.
+2. Đổi API:
+   - `ros::NodeHandle` -> `rclcpp::Node`
+   - `ros::Publisher/Subscriber` -> `rclcpp::Publisher/Subscription`
+   - `ros::Timer` -> `rclcpp::TimerBase`
+   - `ros::Time` -> `rclcpp::Clock/rclcpp::Time`
+3. Đổi include message sang ROS2 style `.../msg/...hpp`.
+4. Đổi callback signatures từ `ConstPtr` kiểu ROS1 sang `SharedPtr` ROS2.
+5. Thay spinner ROS1 bằng ROS2 executor (`MultiThreadedExecutor`).
+6. Build + smoke test bằng `colcon build --packages-select file_player`.
