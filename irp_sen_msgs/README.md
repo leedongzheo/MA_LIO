@@ -2,7 +2,7 @@
 
 Maintainer: Jinyong Jeong (jjy0923@kaist.ac.kr)
 
-If you use the ROS package provided by the complex urban data set, clone this msg package to the src folder of catkin_ws.
+If you use the ROS 2 package provided by the complex urban data set, clone this msg package to the src folder of ros2_ws.
 
 ## Msg type
 
