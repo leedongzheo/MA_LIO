@@ -1,22 +1,26 @@
 #include "mainwindow.h"
+
 #include <QApplication>
-//#include <GL/glew.h>
+#include <QProcess>
+
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/glu.h>
-//#include <GL/glut.h>
-#include <ros/ros.h>
-#include <QProcess>
+
+#include <rclcpp/rclcpp.hpp>
 
 int main(int argc, char *argv[])
 {
-  ros::init(argc, argv, "file_player");
-  ros::NodeHandle nh;
+  rclcpp::init(argc, argv);
 
-  QApplication a(argc, argv);
-  MainWindow w;
-  w.RosInit(nh);
-  w.show();
+  QApplication app(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("file_player");
 
-   return a.exec();
+  MainWindow window;
+  window.RosInit(node);
+  window.show();
+
+  const int ret = app.exec();
+  rclcpp::shutdown();
+  return ret;
 }

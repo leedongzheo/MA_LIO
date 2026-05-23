@@ -186,7 +186,7 @@ City02/
 - [x] `MA_LIO/src/preprocess.*`: đã đổi kiểu `PointCloud2`, `Publisher`, `Time` sang ROS2 (`sensor_msgs::msg`, `rclcpp`).
 - [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
 - [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung; log runtime cũng đã đổi `ROS_INFO` -> `RCLCPP_INFO`.
-- [ ] `file_player/*`: port toàn bộ từ catkin/rosbag/dynamic_reconfigure sang ROS2 hoặc thay bằng `city02_player_py`.
+- [ ] `file_player/*`: đã chuyển bước 1 (Node init) ở `file_player/src/main.cpp`, `file_player/src/mainwindow.*` sang `rclcpp`; còn tồn đọng lớn trong `ROSThread.*`, `CMakeLists.txt`, `package.xml`, `dynamic_reconfigure`, `rosbag`, ROS1 message includes.
 - [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
 
 ---
@@ -235,3 +235,8 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 4. Đổi callback signatures từ `ConstPtr` kiểu ROS1 sang `SharedPtr` ROS2.
 5. Thay spinner ROS1 bằng ROS2 executor (`MultiThreadedExecutor`).
 6. Build + smoke test bằng `colcon build --packages-select file_player`.
+
+## 12) Log tiến độ (2026-05-23 - Bước 1 file_player Node init)
+
+- ✅ Bước 1 `file_player` đã hoàn thành: chuyển khởi tạo node từ `ros::init`/`ros::NodeHandle` sang `rclcpp::init` + `rclcpp::Node` trong `file_player/src/main.cpp`, và đổi `MainWindow::RosInit` nhận `rclcpp::Node::SharedPtr` (tạm lưu node, chưa bind xuống `ROSThread` vì lớp này vẫn ROS1).
+- ⚠️ Tồn đọng phát sinh sau bước 1: `file_player/src/mainwindow.h` vẫn còn include ROS1 (`rosbag/bag.h`, `std_srvs/SetBool.h`) do phụ thuộc dây chuyền từ `ROSThread.h`; việc dọn include/message sẽ thực hiện ở bước 2 khi port `ROSThread.*`.
