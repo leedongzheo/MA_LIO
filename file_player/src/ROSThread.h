@@ -15,8 +15,8 @@
 #include <QPainter>
 #include <QLabel>
 #include <algorithm>
-#include <ros/ros.h>
-#include <ros/time.h>
+#include <rclcpp/rclcpp.hpp>
+#include <builtin_interfaces/msg/time.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,34 +24,34 @@
 #include <image_transport/transport_hints.h>
 #include <cv_bridge/cv_bridge.h>
 
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/LaserScan.h>
-#include <rosgraph_msgs/Clock.h>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <rosgraph_msgs/msg/clock.hpp>
 
 #include <camera_info_manager/camera_info_manager.h>
-#include <std_msgs/String.h>
-#include <std_msgs/Bool.h>
+#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <std_srvs/SetBool.h>
-#include <std_msgs/Int64MultiArray.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Float64.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/LaserScan.h>
-#include <sensor_msgs/CameraInfo.h>
+#include <std_msgs/msg/int64_multi_array.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_msgs/msg/float64.hpp>
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/SetCameraInfo.h>
 #include <irp_sen_msgs/vrs.h>
 #include <irp_sen_msgs/altimeter.h>
 #include <irp_sen_msgs/encoder.h>
 #include <irp_sen_msgs/fog.h>
-#include <irp_sen_msgs/imu.h>
+#include <irp_sen_msgs/msg/imu.hpp>
 #include <irp_sen_msgs/fog_3axis.h>
 #include <irp_sen_msgs/LaserScanArray.h>
 
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/MagneticField.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/Quaternion.h>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/magnetic_field.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <geometry_msgs/msg/quaternion.hpp>
 #include <tf/transform_datatypes.h>
 
 
@@ -82,7 +82,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <livox_ros_driver/CustomMsg.h>
+#include <livox_ros_driver/msg/custom_msg.hpp>
 
 using namespace std;
 using namespace cv;
@@ -94,18 +94,18 @@ class ROSThread : public QThread
 public:
     explicit ROSThread(QObject *parent = 0, QMutex *th_mutex = 0);
     ~ROSThread();
-    void ros_initialize(ros::NodeHandle &n);
+    void ros_initialize(const rclcpp::Node::SharedPtr &node);
     void run();
     QMutex *mutex_;
-    ros::NodeHandle nh_;
-    ros::NodeHandle left_camera_nh_;
-    ros::NodeHandle right_camera_nh_;
+    rclcpp::Node::SharedPtr node_;
+    // TODO(ROS2): camera NodeHandle namespaces to be migrated.
 
-    ros::NodeHandle thermal_left_camera_nh_;
-    ros::NodeHandle thermal_right_camera_nh_;
 
-    ros::NodeHandle thermal_14bit_left_camera_nh_;
-    ros::NodeHandle thermal_14bit_right_camera_nh_;
+
+
+
+
+
 
     boost::shared_ptr<camera_info_manager::CameraInfoManager> left_cinfo_;
     boost::shared_ptr<camera_info_manager::CameraInfoManager> right_cinfo_;
@@ -143,34 +143,34 @@ private:
     int search_bound_;
     bool omni_active_;
 
-    ros::Subscriber start_sub_;
-    ros::Subscriber stop_sub_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr start_sub_;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stop_sub_;
 
-    ros::Publisher gps_pub_;
-    ros::Publisher inspva_pub_;
-    ros::Publisher inspvax_pub_;
-    ros::Publisher gps_odometry_pub_;
-    ros::Publisher imu_origin_pub_;
-    ros::Publisher imu_pub_;
-    ros::Publisher magnet_pub_;
-    ros::Publisher velodyne_left_pub_;
-    ros::Publisher velodyne_right_pub_;
-    ros::Publisher livox_avia_pub_;
-    ros::Publisher livox_tele_pub_;   
-    ros::Publisher ouster_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub_;
+    // TODO(ROS2): inspva publisher message type pending migration.
+    // TODO(ROS2): inspvax publisher message type pending migration.
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr gps_odometry_pub_;
+    rclcpp::Publisher<irp_sen_msgs::msg::Imu>::SharedPtr imu_origin_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::MagneticField>::SharedPtr magnet_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr velodyne_left_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr velodyne_right_pub_;
+    rclcpp::Publisher<livox_ros_driver::msg::CustomMsg>::SharedPtr livox_avia_pub_;
+    rclcpp::Publisher<livox_ros_driver::msg::CustomMsg>::SharedPtr livox_tele_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr ouster_pub_;
 
-    ros::Publisher clock_pub_;
+    rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
 
     int64_t prev_clock_stamp_;
 
     multimap<int64_t, string>                    data_stamp_;
-    map<int64_t, nav_msgs::Odometry>     odometry_data_;
-    map<int64_t, sensor_msgs::NavSatFix>    gps_data_;
-    map<int64_t, nav_msgs::Odometry>     gps_odometry_data_;
+    map<int64_t, nav_msgs::msg::Odometry>     odometry_data_;
+    map<int64_t, sensor_msgs::msg::NavSatFix>    gps_data_;
+    map<int64_t, nav_msgs::msg::Odometry>     gps_odometry_data_;
 
-    map<int64_t, irp_sen_msgs::imu>         imu_data_origin_;
-    map<int64_t, sensor_msgs::Imu>         imu_data_;
-    map<int64_t, sensor_msgs::MagneticField>         mag_data_;
+    map<int64_t, irp_sen_msgs::msg::Imu>         imu_data_origin_;
+    map<int64_t, sensor_msgs::msg::Imu>         imu_data_;
+    map<int64_t, sensor_msgs::msg::MagneticField>         mag_data_;
 
     DataThread<int64_t> data_stamp_thread_;
     DataThread<int64_t> gps_thread_;
@@ -196,8 +196,8 @@ private:
     void LivoxTeleThread();
     void OusterThread();
 
-    void FilePlayerStart(const std_msgs::BoolConstPtr& msg);
-    void FilePlayerStop(const std_msgs::BoolConstPtr& msg);
+    void FilePlayerStart(const std_msgs::msg::Bool::SharedPtr msg);
+    void FilePlayerStop(const std_msgs::msg::Bool::SharedPtr msg);
 
     vector<string> velodyne_left_file_list_;
     vector<string> velodyne_right_file_list_;
@@ -205,18 +205,18 @@ private:
     vector<string> livox_tele_file_list_;
     vector<string> ouster_file_list_;
 
-    ros::Timer timer_;
-    void TimerCallback(const ros::TimerEvent&);
+    rclcpp::TimerBase::SharedPtr timer_;
+    void TimerCallback();
     int64_t processed_stamp_;
     int64_t pre_timer_stamp_;
     bool reset_process_stamp_flag_;
 
-    pair<string,sensor_msgs::PointCloud2> ouster_next_;
+    pair<string,sensor_msgs::msg::PointCloud2> ouster_next_;
 
-    pair<string,sensor_msgs::PointCloud2> velodyne_left_next_;
-    pair<string,sensor_msgs::PointCloud2> velodyne_right_next_;
-    pair<string,livox_ros_driver::CustomMsg> livox_avia_next_;
-    pair<string,livox_ros_driver::CustomMsg> livox_tele_next_;
+    pair<string,sensor_msgs::msg::PointCloud2> velodyne_left_next_;
+    pair<string,sensor_msgs::msg::PointCloud2> velodyne_right_next_;
+    pair<string,livox_ros_driver::msg::CustomMsg> livox_avia_next_;
+    pair<string,livox_ros_driver::msg::CustomMsg> livox_tele_next_;
 
     int GetDirList(string dir, vector<string> &files);
 
