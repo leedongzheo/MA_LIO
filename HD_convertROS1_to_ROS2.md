@@ -319,3 +319,11 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 - [x] Không còn ROS1 API runtime trong source C++ core đã rà soát (`MA_LIO/src/*`, `file_player/src/*`).
 - [x] Không còn file build-script con trỏ thẳng tới catkin/noetic/kinetic trong các file đã cung cấp để rà soát.
 - [ ] Cần triển khai lại use-case `dynamic_reconfigure` sang ROS2 parameter interface nếu project vẫn cần chỉnh tham số realtime từ GUI/tooling.
+
+## 17) Log tiến độ (2026-05-23 - Hoàn tất dọn ROS1 livox dependency)
+- ✅ Rà soát codebase và build scripts: không còn include ROS1 `#include <livox_ros_driver/CustomMsg.h>` trong mã nguồn chạy thực tế (`MA_LIO/src/*`, `file_player/src/*`).
+- ✅ Chuẩn hóa toàn bộ chữ ký callback/processing sang `livox_ros_driver2::msg::CustomMsg::SharedPtr` trong core và file_player.
+- ✅ Build system dùng ROS2 package `livox_ros_driver2` trong cả `CMakeLists.txt` và `package.xml` của `MA_LIO` + `file_player`.
+- ✅ Dọn tài liệu kỹ thuật còn sót ROS1 trong `README.md` để tránh cấu hình nhầm package driver.
+- ✅ Đánh dấu hoàn thành: **Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.**
+- Checklist đoạn khó chuyển đổi ROS1->ROS2: **Không phát hiện mục tồn đọng kỹ thuật** cho nhánh chuyển đổi `livox_ros_driver` -> `livox_ros_driver2`.

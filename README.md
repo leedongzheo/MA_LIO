@@ -42,7 +42,7 @@ The code is tested on:
 
 ### 1.1. Livox_ros_driver
 
-To install livox_ros_driver, please follow the [Livox_ros_driver Installation](https://github.com/Livox-SDK/livox_ros_driver) guide. Before building MA-LIO and file_player for City Datasets, ensure this driver is sourced.
+To install livox_ros_driver2, please follow the [Livox ROS2 Driver Installation](https://github.com/Livox-SDK/livox_ros_driver2) guide. Before building MA-LIO and file_player for City Datasets, ensure this driver is sourced.
 
 ## 2. Build Package
 
@@ -105,7 +105,7 @@ Users will need to adjust both the input and internals of the function to suit t
 
 ```cpp
 void lidar_cbk_(const sensor_msgs::PointCloud2::ConstPtr &scanMsg_,
-                const livox_ros_driver::CustomMsg::ConstPtr &livoxMsg_, const livox_ros_driver::CustomMsg::ConstPtr &livoxMsg2_)
+                const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg_, const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg2_)
 {
     standard_pcl_cbk(scanMsg_, 0);
     livox_pcl_cbk(livoxMsg_, 1);
@@ -117,7 +117,7 @@ For instance, user can change the input like this:
 
 ```cpp
 void lidar_cbk_(const sensor_msgs::PointCloud2::ConstPtr &scanMsg_,
-                const livox_ros_driver::CustomMsg::ConstPtr &livoxMsg_)
+                const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg_)
 ```
 
 Also, modify the internals of the function as follows:
@@ -202,7 +202,7 @@ The City Datasets were utilized for the evaluation and ablation study of MA-LIO.
 
 In the datasets, we provide Livox Avia, Tele, and Ouster point files (.bin) containing full values (x, y, z, intensity, time, etc.) from their original point cloud data. The bin file names correspond to their timestamps. Additionally, the data_stamp.csv and ouster_stamp.csv files display the timestamps of our measurements, while the Groundtruth.txt file presents the ground truth trajectory with the format (timestamp, x, y, z, qx, qy, qz, qw). The xsens_imu.csv file contains IMU measurements.
 
-By using the provided file player, users can transform the .bin files and .csv files into ROS messages. In the case of Ouster data, the files are converted to sensor_msgs::PointCloud2 format, while for Livox data, they are transformed into livox_ros_driver::CustomMsg format. Finally, the IMU data is presented as sensor_msgs::Imu.
+By using the provided file player, users can transform the .bin files and .csv files into ROS messages. In the case of Ouster data, the files are converted to sensor_msgs::PointCloud2 format, while for Livox data, they are transformed into livox_ros_driver2::msg::CustomMsg format. Finally, the IMU data is presented as sensor_msgs::Imu.
 
 Users can download city dataset using the link. We exhibit and describe the each sequence in the city dataset as below.
 Furthermore, the extrinsic transformation between the IMU and LiDAR sensors can be verified through [Extrinsic.txt](https://github.com/minwoo0611/MA-LIO/blob/main/Extrinsic.txt)
