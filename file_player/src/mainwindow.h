@@ -22,8 +22,6 @@
 #include <QVector>
 
 #include <rclcpp/rclcpp.hpp>
-#include <rosbag/bag.h>
-#include <std_srvs/SetBool.h>
 
 #include "ROSThread.h"
 

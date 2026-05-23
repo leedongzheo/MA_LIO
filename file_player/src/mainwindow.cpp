@@ -61,8 +61,7 @@ MainWindow::~MainWindow()
 void MainWindow::RosInit(const rclcpp::Node::SharedPtr &node)
 {
   node_ = node;
-  // TODO(ros2-migration): bước hiện tại chỉ chuyển Node initialization ở main/mainwindow.
-  // ROSThread vẫn còn ROS1 API và sẽ được chuyển ở bước tiếp theo.
+  my_ros_->ros_initialize(node_);
 }
 
 void MainWindow::TryClose()

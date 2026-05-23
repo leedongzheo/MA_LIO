@@ -98,7 +98,6 @@ public:
     void run();
     QMutex *mutex_;
     rclcpp::Node::SharedPtr node_;
-    // TODO(ROS2): camera NodeHandle namespaces to be migrated.
 
 
 
