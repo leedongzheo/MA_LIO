@@ -40,6 +40,7 @@ find_package(message_filters REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
+find_package(livox_ros_driver2 REQUIRED)
 
 include_directories(
   include
@@ -63,6 +64,7 @@ add_executable(malio_mapping
 ament_target_dependencies(malio_mapping
   rclcpp std_msgs sensor_msgs geometry_msgs nav_msgs
   tf2 tf2_ros pcl_conversions message_filters
+  livox_ros_driver2
 )
 
 target_link_libraries(malio_mapping ${PCL_LIBRARIES})

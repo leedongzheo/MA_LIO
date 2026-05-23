@@ -187,7 +187,7 @@ City02/
 - [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
 - [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung; log runtime cũng đã đổi `ROS_INFO` -> `RCLCPP_INFO`.
 - [x] `file_player/src/*.cpp`, `file_player/src/*.h`: đã rà soát và dọn logic ROS1 còn sót (gắn `RosInit` -> `ROSThread::ros_initialize`, bỏ include `rosbag/std_srvs` ROS1, đổi kiểu `irp_sen_msgs::imu` cũ sang `irp_sen_msgs::msg::Imu`).
-- [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
+- [x] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
 
 ---
 
@@ -254,11 +254,11 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
   - `file_player/CMakeLists.txt`, `file_player/package.xml` vẫn ROS1/catkin.
   - `dynamic_reconfigure` vẫn ROS1-only trong `ROSThread.h`.
   - include `rosbag/bag.h` và `camera_info_manager` vẫn ROS1 style.
-  - `livox_ros_driver/msg/custom_msg.hpp` phụ thuộc package ROS2 tương ứng; nếu workspace chưa có bản ROS2 sẽ lỗi build.
+  - `livox_ros_driver2/msg/custom_msg.hpp` phụ thuộc package ROS2 tương ứng; nếu workspace chưa có bản ROS2 sẽ lỗi build.
 
 ## 14) Log tiến độ (2026-05-23 - Bước 3 file_player build system + dọn ROS1 deps)
 - ✅ Đã chuyển `file_player/CMakeLists.txt` từ `catkin` sang `ament_cmake` (ROS2 Jazzy), khai báo dependencies ROS2 và cấu hình build Qt/PCL/OpenCV theo chuẩn ROS2.
-- ✅ Đã chuyển `file_player/package.xml` sang format `3` với `buildtool_depend=ament_cmake` và nhóm dependency ROS2 (`rclcpp`, `sensor_msgs`, `nav_msgs`, `pcl_conversions`, `irp_sen_msgs`, `livox_ros_driver`, ...).
+- ✅ Đã chuyển `file_player/package.xml` sang format `3` với `buildtool_depend=ament_cmake` và nhóm dependency ROS2 (`rclcpp`, `sensor_msgs`, `nav_msgs`, `pcl_conversions`, `irp_sen_msgs`, `livox_ros_driver2`, ...).
 - ✅ Đã dọn thư viện ROS1 còn sót trong `file_player/src/ROSThread.h` (chỉ phần dependency/include):
   - bỏ `dynamic_reconfigure`, `rosbag`, `ros/transport_hints`, `tf` ROS1 include.
   - đổi include service/message sang ROS2 style (`std_srvs/srv/set_bool.hpp`, `sensor_msgs/srv/set_camera_info.hpp`, `irp_sen_msgs/msg/*.hpp`).
@@ -279,3 +279,12 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 - ✅ `file_player/src/ROSThread.cpp`: đổi nốt kiểu message cũ `irp_sen_msgs::imu` sang `irp_sen_msgs::msg::Imu` và cập nhật comment publisher tương ứng ROS2.
 - ✅ Kết luận module `file_player` (phạm vi source `.cpp/.h`) đã sạch ROS1 API còn sót.
 - ⚠️ Chưa thể chạy build xác nhận do môi trường hiện tại chưa có `colcon` như đã ghi nhận.
+
+
+## 16) Log tiến độ (2026-05-23 - Bước 5 chuyển toàn bộ livox_ros_driver -> livox_ros_driver2)
+- ✅ Đã thay include ROS1 `#include <livox_ros_driver/CustomMsg.h>` bằng ROS2 Jazzy `#include <livox_ros_driver2/msg/custom_msg.hpp>` trong cụm core `MA_LIO/src/*`.
+- ✅ Đã đổi toàn bộ chữ ký callback/processing từ `livox_ros_driver::CustomMsg::ConstPtr` sang `livox_ros_driver2::msg::CustomMsg::SharedPtr`.
+- ✅ Đã đồng bộ kiểu message/point trong `file_player/src/ROSThread.*` sang namespace `livox_ros_driver2::msg::*` (gồm `CustomMsg`, `CustomPoint`) và include tương ứng.
+- ✅ Đã cập nhật build/dependency để resolve đúng package ROS2: `file_player/CMakeLists.txt`, `file_player/package.xml`, `MA_LIO/CMakeLists.txt`, `MA_LIO/package.xml` đều dùng `livox_ros_driver2`.
+- ✅ Rà soát không còn tham chiếu `livox_ros_driver` trong source/runtime path cần chạy.
+- ✅ Không phát hiện đoạn chuyển đổi nào bị chặn kỹ thuật trong phạm vi thay thế Livox message; hạng mục được chốt hoàn thành.

@@ -24,7 +24,7 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/msg/vector3.hpp>
-#include <livox_ros_driver/CustomMsg.h>
+#include <livox_ros_driver2/msg/custom_msg.hpp>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -240,7 +240,7 @@ void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstPtr &msg, int nu
     sig_buffer.notify_all();
 }
 
-void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg, int num_lidar)
+void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, int num_lidar)
 {
     mtx_buffer.lock();
     last_timestamp_lidar = msg->header.stamp.toSec();
@@ -278,7 +278,7 @@ void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in)
 // Especially, if user wants to use only 1 lidar, 
 // There is only one function inside of lidar_cbk_ function with two inputs for lidar_cbk_. 
 void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstPtr &scanMsg_,
-                const livox_ros_driver::CustomMsg::ConstPtr &livoxMsg_, const livox_ros_driver::CustomMsg::ConstPtr &livoxMsg2_)
+                const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg_, const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg2_)
 {
     standard_pcl_cbk(scanMsg_, 0);
     livox_pcl_cbk(livoxMsg_, 1);
@@ -876,7 +876,7 @@ int main(int argc, char **argv)
         cout << "~~~~" << ROOT_DIR << " doesn't exist" << endl;
 
     typedef sensor_msgs::msg::PointCloud2 LidarMsgType;
-    typedef livox_ros_driver::CustomMsg LivoxMsgType;
+    typedef livox_ros_driver2::msg::CustomMsg LivoxMsgType;
     typedef message_filters::Subscriber<LidarMsgType> LidarSubType;
     typedef message_filters::Subscriber<LivoxMsgType> LivoxSubType;
 

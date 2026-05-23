@@ -3,7 +3,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <livox_ros_driver/CustomMsg.h>
+#include <livox_ros_driver2/msg/custom_msg.hpp>
 
 using namespace std;
 
@@ -62,7 +62,7 @@ class Preprocess
   Preprocess();
   ~Preprocess();
   
-  void process(const livox_ros_driver::CustomMsg::ConstPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
+  void process(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
   void process(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
 
   // sensor_msgs::PointCloud2::ConstPtr pointcloud;
@@ -80,7 +80,7 @@ class Preprocess
     
 
   private:
-  void avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg, int lidar);
+  void avia_handler(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, int lidar);
   void oust64_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar);
   void velodyne_handler(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int lidar);
   void pub_func(PointCloudXYZI &pl, const rclcpp::Time &ct);
