@@ -113,7 +113,7 @@ void Preprocess::oust64_handler(const sensor_msgs::msg::PointCloud2::ConstShared
   pl_corn.reserve(plsize);
   pl_surf.reserve(plsize);
 
-  double time_stamp = msg->header.stamp.toSec();
+  double time_stamp = rclcpp::Time(msg->header.stamp).seconds();
   // cout << "===================================" << endl;
   // printf("Pt size = %d, N_SCANS[lidar] = %d\r\n", plsize, N_SCANS[lidar]);
   maximum_time = -9999;

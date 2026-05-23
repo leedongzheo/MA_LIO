@@ -288,3 +288,16 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 - ✅ Đã cập nhật build/dependency để resolve đúng package ROS2: `file_player/CMakeLists.txt`, `file_player/package.xml`, `MA_LIO/CMakeLists.txt`, `MA_LIO/package.xml` đều dùng `livox_ros_driver2`.
 - ✅ Rà soát không còn tham chiếu `livox_ros_driver` trong source/runtime path cần chạy.
 - ✅ Không phát hiện đoạn chuyển đổi nào bị chặn kỹ thuật trong phạm vi thay thế Livox message; hạng mục được chốt hoàn thành.
+
+## 17) Log tiến độ (2026-05-23 - Static sweep ROS1 API + ROS2 syntax fix)
+- ✅ Đã sửa cú pháp ROS2 trong core `MA_LIO/src/*`:
+  - đổi callback `sensor_msgs::msg::PointCloud2::ConstPtr` -> `sensor_msgs::msg::PointCloud2::ConstSharedPtr`.
+  - đổi toàn bộ truy cập thời gian `header.stamp.toSec()` -> `rclcpp::Time(header.stamp).seconds()` để tương thích ROS2 Jazzy.
+- ⚠️ Tồn đọng chưa thể coi là "sạch hoàn toàn ROS1" trên toàn repo:
+  - `README.md` vẫn chứa ví dụ ROS1 (`ConstPtr`, `livox_ros_driver`, `catkin build`).
+  - `file_player/src/CMakeLists.txt` vẫn là toplevel catkin path cũ (`/opt/ros/kinetic/share/catkin/cmake/toplevel.cmake`).
+
+### Checklist tồn đọng sau static sweep
+- [x] Core runtime `MA_LIO/src/*` đã cập nhật cú pháp ROS2 cho kiểu callback/time stamp.
+- [ ] Cần dọn ví dụ ROS1 trong `README.md` để tránh nhiễu tài liệu.
+- [ ] Cần xử lý/loại bỏ `file_player/src/CMakeLists.txt` kiểu catkin legacy nếu file này còn được dùng trong build pipeline.
