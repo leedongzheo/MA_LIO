@@ -185,7 +185,7 @@ City02/
 - [x] `MA_LIO/src/laserMapping.cpp`: đã bỏ `ros::` + `tf::` ROS1, chuyển sang `rclcpp` + `tf2_ros::TransformBroadcaster`.
 - [x] `MA_LIO/src/preprocess.*`: đã đổi kiểu `PointCloud2`, `Publisher`, `Time` sang ROS2 (`sensor_msgs::msg`, `rclcpp`).
 - [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
-- [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung.
+- [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung; log runtime cũng đã đổi `ROS_INFO` -> `RCLCPP_INFO`.
 - [ ] `file_player/*`: port toàn bộ từ catkin/rosbag/dynamic_reconfigure sang ROS2 hoặc thay bằng `city02_player_py`.
 - [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
 
@@ -201,3 +201,8 @@ City02/
 - ⚠️ `file_player/*` vẫn còn ROS1 API (catkin/roscpp/rosbag/dynamic_reconfigure) nên toàn repo chưa chuyển đổi hoàn toàn.
 
 - ✅ `MA_LIO/src/laserMapping.cpp` đã đổi sang ROS2 API: `rclcpp::Node`, `rclcpp::Publisher/Subscription`, `rclcpp::Time`, `rclcpp::spin_some`, và TF broadcaster ROS2 (`tf2_ros`).
+
+
+## 11) Log tiến độ (2026-05-23)
+- ✅ Đã thay nốt macro ROS1 còn sót trong `MA_LIO/src/IMU_Processing.hpp`: `ROS_INFO("IMU Initial Done")` -> `RCLCPP_INFO(rclcpp::get_logger("ImuProcess"), ...)`.
+- ⚠️ `file_player/*` vẫn là cụm ROS1 lớn (catkin + roscpp + rosbag + dynamic_reconfigure), cần một nhánh port riêng để chuyển trọn sang ROS2 Jazzy.

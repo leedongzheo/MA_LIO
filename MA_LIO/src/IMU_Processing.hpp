@@ -23,6 +23,7 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include "use-ikfom.hpp"
 #include "BsplineSE3.h"
 #include "associate_uct.hpp"
@@ -546,7 +547,7 @@ void ImuProcess::Process(const MeasureGroup &meas, esekfom::esekf<state_ikfom, 1
 
       cov_acc = cov_acc_scale;
       cov_gyr = cov_gyr_scale;
-      ROS_INFO("IMU Initial Done");
+      RCLCPP_INFO(rclcpp::get_logger("ImuProcess"), "IMU Initial Done");
     }
 
     return;
