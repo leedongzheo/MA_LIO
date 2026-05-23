@@ -238,6 +238,11 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 
 ## 12) Log tiến độ (2026-05-23 - Bước 1 file_player Node init)
 
+## 13) Checklist tồn đọng chưa thể chuyển ngay (cần nhánh port riêng)
+- [ ] `file_player/launch/file_player.launch`: vẫn là XML launch ROS1 (`<launch>`, `$(arg)`, `type=`), chưa đổi sang ROS2 `launch.py`.
+- [ ] `MA_LIO/launch/mapping_city.launch` và `MA_LIO/launch/mapping_urban.launch`: vẫn là launch XML ROS1 cũ; hiện đã có bản ROS2 thay thế (`*.launch.py`) nhưng file cũ vẫn tồn tại trong repo.
+- [ ] `file_player/README.md`: tài liệu chạy vẫn dùng workflow ROS1 (`catkin_make`, `roslaunch`), cần rewrite hoàn toàn sang `colcon` + `ros2 launch`.
+
 - ✅ Bước 1 `file_player` đã hoàn thành: chuyển khởi tạo node từ `ros::init`/`ros::NodeHandle` sang `rclcpp::init` + `rclcpp::Node` trong `file_player/src/main.cpp`, và đổi `MainWindow::RosInit` nhận `rclcpp::Node::SharedPtr` (tạm lưu node, chưa bind xuống `ROSThread` vì lớp này vẫn ROS1).
 - ⚠️ Tồn đọng phát sinh sau bước 1: `file_player/src/mainwindow.h` vẫn còn include ROS1 (`rosbag/bag.h`, `std_srvs/SetBool.h`) do phụ thuộc dây chuyền từ `ROSThread.h`; việc dọn include/message sẽ thực hiện ở bước 2 khi port `ROSThread.*`.
 
