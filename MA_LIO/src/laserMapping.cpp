@@ -227,15 +227,15 @@ void lasermap_fov_segment()
         kdtree_delete_counter = ikdtree.Delete_Point_Boxes(cub_needrm);
 }
 
-void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstPtr &msg, int num_lidar)
+void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, int num_lidar)
 {
     mtx_buffer.lock();
     PointCloudXYZI::Ptr ptr(new PointCloudXYZI());
     p_pre->process(msg, ptr, num_lidar);
     lidar_buffer.push_back(ptr);
-    time_start_buffer.push_back(msg->header.stamp.toSec());
-    time_buffer.push_back(msg->header.stamp.toSec() + p_pre->maximum_time / double(1000));
-    last_timestamp_lidar = msg->header.stamp.toSec();
+    time_start_buffer.push_back(rclcpp::Time(msg->header.stamp).seconds());
+    time_buffer.push_back(rclcpp::Time(msg->header.stamp).seconds() + p_pre->maximum_time / double(1000));
+    last_timestamp_lidar = rclcpp::Time(msg->header.stamp).seconds();
     mtx_buffer.unlock();
     sig_buffer.notify_all();
 }
@@ -243,11 +243,11 @@ void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstPtr &msg, int nu
 void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, int num_lidar)
 {
     mtx_buffer.lock();
-    last_timestamp_lidar = msg->header.stamp.toSec();
+    last_timestamp_lidar = rclcpp::Time(msg->header.stamp).seconds();
     PointCloudXYZI::Ptr ptr(new PointCloudXYZI());
     p_pre->process(msg, ptr, num_lidar);
     lidar_buffer.push_back(ptr);
-    time_start_buffer.push_back(msg->header.stamp.toSec());
+    time_start_buffer.push_back(rclcpp::Time(msg->header.stamp).seconds());
     time_buffer.push_back(last_timestamp_lidar + p_pre->maximum_time / double(1000));
     mtx_buffer.unlock();
     sig_buffer.notify_all();
@@ -257,7 +257,7 @@ void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in)
 {
     sensor_msgs::msg::Imu::SharedPtr msg(new sensor_msgs::msg::Imu(*msg_in));
     msg->header.stamp = rclcpp::Time(msg_in->header.stamp) - rclcpp::Duration::from_seconds(time_diff_lidar_to_imu);
-    double timestamp = msg->header.stamp.toSec();
+    double timestamp = rclcpp::Time(msg->header.stamp).seconds();
     mtx_buffer.lock();
     if (timestamp < last_timestamp_imu)
     {
@@ -277,7 +277,7 @@ void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in)
 // In example case, there should be only two cbk_ function inside of the lidar_cbk_.
 // Especially, if user wants to use only 1 lidar, 
 // There is only one function inside of lidar_cbk_ function with two inputs for lidar_cbk_. 
-void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstPtr &scanMsg_,
+void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &scanMsg_,
                 const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg_, const livox_ros_driver2::msg::CustomMsg::SharedPtr &livoxMsg2_)
 {
     standard_pcl_cbk(scanMsg_, 0);
@@ -286,8 +286,8 @@ void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstPtr &scanMsg_,
 }
 
 /*** For UrbanNav Dataset (Case: LiDAR 2)***/
-/*void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstPtr &scanMsg_,
-                const sensor_msgs::msg::PointCloud2::ConstPtr &scanMsg2_)
+/*void lidar_cbk_(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &scanMsg_,
+                const sensor_msgs::msg::PointCloud2::ConstSharedPtr &scanMsg2_)
 {
     standard_pcl_cbk(scanMsg_, 0);
     standard_pcl_cbk(scanMsg2_, 1);
@@ -314,7 +314,7 @@ void extrinsic_update()
 bool sync_packages(MeasureGroup &meas)
 {
     /*** TBD : 0.2 is a hard-coded. It actually calculate using the LiDAR and IMU frequency ***/
-    if (lidar_buffer.empty() || imu_buffer.empty() || imu_buffer.back()->header.stamp.toSec() - time_buffer.front() < 0.2)
+    if (lidar_buffer.empty() || imu_buffer.empty() || rclcpp::Time(imu_buffer.back()->header.stamp).seconds() - time_buffer.front() < 0.2)
         return false;
 
     /*** push a lidar scan ***/
@@ -365,13 +365,13 @@ bool sync_packages(MeasureGroup &meas)
         return false;
 
     /*** push imu data, and pop from imu buffer ***/
-    double imu_time = imu_buffer.front()->header.stamp.toSec();
+    double imu_time = rclcpp::Time(imu_buffer.front()->header.stamp).seconds();
     meas.imu.clear();
     meas.imu_cont.clear();
 
     while ((!imu_buffer.empty()) && (imu_time < lidar_end_time))
     {
-        imu_time = imu_buffer.front()->header.stamp.toSec();
+        imu_time = rclcpp::Time(imu_buffer.front()->header.stamp).seconds();
         if (imu_time > lidar_end_time)
             break;
         meas.imu.push_back(imu_buffer.front());
