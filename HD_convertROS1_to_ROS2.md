@@ -240,3 +240,18 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 
 - ✅ Bước 1 `file_player` đã hoàn thành: chuyển khởi tạo node từ `ros::init`/`ros::NodeHandle` sang `rclcpp::init` + `rclcpp::Node` trong `file_player/src/main.cpp`, và đổi `MainWindow::RosInit` nhận `rclcpp::Node::SharedPtr` (tạm lưu node, chưa bind xuống `ROSThread` vì lớp này vẫn ROS1).
 - ⚠️ Tồn đọng phát sinh sau bước 1: `file_player/src/mainwindow.h` vẫn còn include ROS1 (`rosbag/bag.h`, `std_srvs/SetBool.h`) do phụ thuộc dây chuyền từ `ROSThread.h`; việc dọn include/message sẽ thực hiện ở bước 2 khi port `ROSThread.*`.
+
+## 13) Log tiến độ (2026-05-23 - Bước 2 file_player ROSThread main flow)
+- ✅ Đã port luồng chính của `file_player/src/ROSThread.*` sang ROS2 API mức runtime:
+  - `ros::NodeHandle` -> `rclcpp::Node::SharedPtr` trong `ros_initialize(...)`.
+  - `ros::Subscriber/Publisher` -> `create_subscription` / `create_publisher`.
+  - `ros::Timer` + `ros::Time::now()` -> `create_wall_timer` + `node_->now()`.
+  - `ros::AsyncSpinner + waitForShutdown` -> `rclcpp::executors::MultiThreadedExecutor`.
+  - callback `std_msgs::BoolConstPtr` -> `std_msgs::msg::Bool::SharedPtr`.
+  - các gán stamp `.fromNSec(...)` -> `header.stamp = rclcpp::Time(...)`.
+- ✅ Đã đổi include message trong `ROSThread.h` sang ROS2 style `.../msg/...hpp` cho các type đang dùng trực tiếp trong luồng phát dữ liệu.
+- ⚠️ Tồn đọng phát hiện thêm trong cùng cụm:
+  - `file_player/CMakeLists.txt`, `file_player/package.xml` vẫn ROS1/catkin.
+  - `dynamic_reconfigure` vẫn ROS1-only trong `ROSThread.h`.
+  - include `rosbag/bag.h` và `camera_info_manager` vẫn ROS1 style.
+  - `livox_ros_driver/msg/custom_msg.hpp` phụ thuộc package ROS2 tương ứng; nếu workspace chưa có bản ROS2 sẽ lỗi build.

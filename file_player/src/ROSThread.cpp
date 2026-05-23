@@ -93,41 +93,41 @@ ROSThread::~ROSThread()
   if(ouster_thread_.thread_.joinable()) ouster_thread_.thread_.join();
 }
 
-void ROSThread::ros_initialize(ros::NodeHandle &n)
+void ROSThread::ros_initialize(const rclcpp::Node::SharedPtr &node)
 {
-  nh_ = n;
+  node_ = node;
 
-  pre_timer_stamp_ = ros::Time::now().toNSec();
-  timer_ = nh_.createTimer(ros::Duration(0.0001), boost::bind(&ROSThread::TimerCallback, this, _1));
+  pre_timer_stamp_ = node_->now().nanoseconds();
+  timer_ = node_->create_wall_timer(std::chrono::microseconds(100), std::bind(&ROSThread::TimerCallback, this));
 
-  start_sub_  = nh_.subscribe<std_msgs::Bool>("/file_player_start", 1, boost::bind(&ROSThread::FilePlayerStart, this, _1));
-  stop_sub_    = nh_.subscribe<std_msgs::Bool>("/file_player_stop", 1, boost::bind(&ROSThread::FilePlayerStop, this, _1));
+  start_sub_  = node_->create_subscription<std_msgs::msg::Bool>("/file_player_start", 1, std::bind(&ROSThread::FilePlayerStart, this, std::placeholders::_1));
+  stop_sub_   = node_->create_subscription<std_msgs::msg::Bool>("/file_player_stop", 1, std::bind(&ROSThread::FilePlayerStop, this, std::placeholders::_1));
 
-  //gps_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("/gps/fix", 1000);
-  //inspva_pub_ = nh_.advertise<novatel_gps_msgs::Inspva>("/inspva", 1000);
-  //inspvax_pub_ = nh_.advertise<novatel_oem7_msgs::INSPVAX>("/inspvax", 1000);
+  //gps_pub_ = node_->advertise<sensor_msgs::NavSatFix>("/gps/fix", 1000);
+  //inspva_pub_ = node_->advertise<novatel_gps_msgs::Inspva>("/inspva", 1000);
+  //inspvax_pub_ = node_->advertise<novatel_oem7_msgs::INSPVAX>("/inspvax", 1000);
 
-  // imu_origin_pub_ = nh_.advertise<irp_sen_msgs::imu>("/imu/data", 1000);
-  //imu_origin_pub_ = nh_.advertise<irp_sen_msgs::imu>("/xsens_imu_data", 1000);
-  imu_pub_ = nh_.advertise<sensor_msgs::Imu>("/xsens_imu_data", 1000);
-  //magnet_pub_ = nh_.advertise<sensor_msgs::MagneticField>("/imu/mag", 1000);
+  // imu_origin_pub_ = node_->advertise<irp_sen_msgs::imu>("/imu/data", 1000);
+  //imu_origin_pub_ = node_->advertise<irp_sen_msgs::imu>("/xsens_imu_data", 1000);
+  imu_pub_ = node_->create_publisher<sensor_msgs::msg::Imu>("/xsens_imu_data", 1000);
+  //magnet_pub_ = node_->advertise<sensor_msgs::msg::MagneticField>("/imu/mag", 1000);
 
-  //velodyne_left_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/ns3/velodyne_points", 1000);
-  //velodyne_right_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/ns2/velodyne_points", 1000);
+  //velodyne_left_pub_ = node_->advertise<sensor_msgs::msg::PointCloud2>("/ns3/velodyne_points", 1000);
+  //velodyne_right_pub_ = node_->advertise<sensor_msgs::msg::PointCloud2>("/ns2/velodyne_points", 1000);
 
-  livox_avia_pub_ = nh_.advertise<livox_ros_driver::CustomMsg>("/livox/avia/points", 1000);
-  livox_tele_pub_ = nh_.advertise<livox_ros_driver::CustomMsg>("/livox/tele/points", 1000);
-  ouster_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/os_cloud_node/points", 10000);
+  livox_avia_pub_ = node_->create_publisher<livox_ros_driver::msg::CustomMsg>("/livox/avia/points", 1000);
+  livox_tele_pub_ = node_->create_publisher<livox_ros_driver::msg::CustomMsg>("/livox/tele/points", 1000);
+  ouster_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/os_cloud_node/points", 10000);
 
 
-  clock_pub_ = nh_.advertise<rosgraph_msgs::Clock>("/clock", 1);
+  clock_pub_ = node_->create_publisher<rosgraph_msgs::msg::Clock>("/clock", 1);
 }
 
 void ROSThread::run()
 {
-  ros::AsyncSpinner spinner(0);
-  spinner.start();
-  ros::waitForShutdown();
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node_);
+  executor.spin();
 }
 
 void ROSThread::Ready()
@@ -199,7 +199,7 @@ void ROSThread::Ready()
   inspva_data_.clear();
   while(fscanf(fp,"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%s",&stamp,&latitude,&longitude,&height,&north_velocity,&east_velocity,&up_velocity,&roll,&pitch,&azimuth,status) == 11){
   //17%19[^\n] %29[^\n]
-    inspva_data.header.stamp.fromNSec(stamp);
+    inspva_data.header.stamp = rclcpp::Time(stamp);
     inspva_data.header.frame_id = "inspva";
     inspva_data.latitude = latitude;
     inspva_data.longitude = longitude;
@@ -226,7 +226,7 @@ void ROSThread::Ready()
   inspvax_data_.clear();
   while(fscanf(fp,"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%s",&stamp,&latitude,&longitude,&height,&north_velocity,&east_velocity,&up_velocity,&roll,&pitch,&azimuth,status) == 11){
   //17%19[^\n] %29[^\n]
-    inspvax_data.header.stamp.fromNSec(stamp);
+    inspvax_data.header.stamp = rclcpp::Time(stamp);
     inspvax_data.header.frame_id = "inspvax";
     inspvax_data.latitude = latitude;
     inspvax_data.longitude = longitude;
@@ -246,8 +246,8 @@ void ROSThread::Ready()
   fp = fopen((data_folder_path_+"/sensor_data/xsens_imu.csv").c_str(),"r");
   double q_x,q_y,q_z,q_w,x,y,z,g_x,g_y,g_z,a_x,a_y,a_z,m_x,m_y,m_z;
   irp_sen_msgs::imu imu_data_origin;
-  sensor_msgs::Imu imu_data;
-  sensor_msgs::MagneticField mag_data;
+  sensor_msgs::msg::Imu imu_data;
+  sensor_msgs::msg::MagneticField mag_data;
   imu_data_.clear();
   mag_data_.clear();
 
@@ -255,7 +255,7 @@ void ROSThread::Ready()
     int length = fscanf(fp,"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",&stamp,&q_x,&q_y,&q_z,&q_w,&x,&y,&z,&g_x,&g_y,&g_z,&a_x,&a_y,&a_z,&m_x,&m_y,&m_z);
     if(length != 8 && length != 11 && length != 17) break;
     if(length == 8){
-      imu_data.header.stamp.fromNSec(stamp);
+      imu_data.header.stamp = rclcpp::Time(stamp);
       imu_data.header.frame_id = "imu_link";
       imu_data.orientation.x = q_x;
       imu_data.orientation.y = q_y;
@@ -265,7 +265,7 @@ void ROSThread::Ready()
       imu_data_[stamp] = imu_data;
       imu_data_version_ = 1;
 
-      imu_data_origin.header.stamp.fromNSec(stamp);
+      imu_data_origin.header.stamp = rclcpp::Time(stamp);
       imu_data_origin.header.frame_id = "imu";
       imu_data_origin.quaternion_data.x = q_x;
       imu_data_origin.quaternion_data.y = q_y;
@@ -278,7 +278,7 @@ void ROSThread::Ready()
 
     }
     else if(length == 11){
-      imu_data.header.stamp.fromNSec(stamp);
+      imu_data.header.stamp = rclcpp::Time(stamp);
       imu_data.header.frame_id = "imu_link";
       imu_data.orientation.x = q_x;
       imu_data.orientation.y = q_y;
@@ -293,7 +293,7 @@ void ROSThread::Ready()
       imu_data_[stamp] = imu_data;
       imu_data_version_ = 1;
 
-      imu_data_origin.header.stamp.fromNSec(stamp);
+      imu_data_origin.header.stamp = rclcpp::Time(stamp);
       imu_data_origin.header.frame_id = "imu";
       imu_data_origin.quaternion_data.x = q_x;
       imu_data_origin.quaternion_data.y = q_y;
@@ -305,7 +305,7 @@ void ROSThread::Ready()
       imu_data_origin_[stamp] = imu_data_origin;
     }
     else if(length == 17){
-      imu_data.header.stamp.fromNSec(stamp);
+      imu_data.header.stamp = rclcpp::Time(stamp);
       imu_data.header.frame_id = "husky4/base_link";
       imu_data.orientation.x = q_x;
       imu_data.orientation.y = q_y;
@@ -330,7 +330,7 @@ void ROSThread::Ready()
 
 
       imu_data_[stamp] = imu_data;
-      mag_data.header.stamp.fromNSec(stamp);
+      mag_data.header.stamp = rclcpp::Time(stamp);
       mag_data.header.frame_id = "husky4/base_link";
       mag_data.magnetic_field.x = m_x;
       mag_data.magnetic_field.y = m_y;
@@ -339,7 +339,7 @@ void ROSThread::Ready()
       imu_data_version_ = 2;
 
 
-      imu_data_origin.header.stamp.fromNSec(stamp);
+      imu_data_origin.header.stamp = rclcpp::Time(stamp);
       imu_data_origin.header.frame_id = "husky4/base_link";
       imu_data_origin.quaternion_data.x = q_x;
       imu_data_origin.quaternion_data.y = q_y;
@@ -463,7 +463,7 @@ void ROSThread::DataStampThread()
 
     if(prev_clock_stamp_ == 0 || (stamp - prev_clock_stamp_) > 10000000){
         rosgraph_msgs::Clock clock;
-        clock.clock.fromNSec(stamp);
+        clock.clock = rclcpp::Time(stamp);
         clock_pub_.publish(clock);
         prev_clock_stamp_ = stamp;
     }
@@ -569,9 +569,9 @@ void ROSThread::ImuThread()
   }
 }
 
-void ROSThread::TimerCallback(const ros::TimerEvent&)
+void ROSThread::TimerCallback()
 {
-    int64_t current_stamp = ros::Time::now().toNSec();
+    int64_t current_stamp = node_->now().nanoseconds();
     if(play_flag_ == true && pause_flag_ == false){
       processed_stamp_ += static_cast<int64_t>(static_cast<double>(current_stamp - pre_timer_stamp_) * play_rate_);
     }
@@ -599,7 +599,7 @@ void ROSThread::VelodyneLeftThread()
       //publish data
       if(to_string(data) + ".bin" == velodyne_left_next_.first){
         //publish
-        velodyne_left_next_.second.header.stamp.fromNSec(data);
+        velodyne_left_next_.second.header.stamp = rclcpp::Time(data);
         velodyne_left_next_.second.header.frame_id = "left_velodyne";
         velodyne_left_pub_.publish(velodyne_left_next_.second);
 
@@ -608,7 +608,7 @@ void ROSThread::VelodyneLeftThread()
         //load current data
         pcl::PointCloud<PointXYZIRT> cloud;
         cloud.clear();
-        sensor_msgs::PointCloud2 publish_cloud;
+        sensor_msgs::msg::PointCloud2 publish_cloud;
         string current_file_name = data_folder_path_ + "/sensor_data/VLP_left" +"/"+ to_string(data) + ".bin";
         if(1){
             ifstream file;
@@ -626,7 +626,7 @@ void ROSThread::VelodyneLeftThread()
             file.close();
 
             pcl::toROSMsg(cloud, publish_cloud);
-            publish_cloud.header.stamp.fromNSec(data);
+            publish_cloud.header.stamp = rclcpp::Time(data);
             publish_cloud.header.frame_id = "left_velodyne";
             velodyne_left_pub_.publish(publish_cloud);
 
@@ -637,7 +637,7 @@ void ROSThread::VelodyneLeftThread()
       //load next data
       pcl::PointCloud<PointXYZIRT> cloud;
       cloud.clear();
-      sensor_msgs::PointCloud2 publish_cloud;
+      sensor_msgs::msg::PointCloud2 publish_cloud;
       current_file_index = find(next(velodyne_left_file_list_.begin(),max(0,previous_file_index-search_bound_)),velodyne_left_file_list_.end(),to_string(data)+".bin") - velodyne_left_file_list_.begin();
       if(find(next(velodyne_left_file_list_.begin(),max(0,previous_file_index-search_bound_)),velodyne_left_file_list_.end(),velodyne_left_file_list_[current_file_index+1]) != velodyne_left_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/VLP_left" +"/"+ velodyne_left_file_list_[current_file_index+1];
@@ -681,7 +681,7 @@ void ROSThread::VelodyneRightThread()
       //publish data
       if(to_string(data) + ".bin" == velodyne_right_next_.first){
         //publish
-        velodyne_right_next_.second.header.stamp.fromNSec(data);
+        velodyne_right_next_.second.header.stamp = rclcpp::Time(data);
         velodyne_right_next_.second.header.frame_id = "right_velodyne";
         velodyne_right_pub_.publish(velodyne_right_next_.second);
       }else{
@@ -689,7 +689,7 @@ void ROSThread::VelodyneRightThread()
         //load current data
         pcl::PointCloud<PointXYZIRT> cloud;
         cloud.clear();
-        sensor_msgs::PointCloud2 publish_cloud;
+        sensor_msgs::msg::PointCloud2 publish_cloud;
         string current_file_name = data_folder_path_ + "/sensor_data/VLP_right" +"/"+ to_string(data) + ".bin";
         if(1){
             ifstream file;
@@ -707,7 +707,7 @@ void ROSThread::VelodyneRightThread()
             file.close();
 
             pcl::toROSMsg(cloud, publish_cloud);
-            publish_cloud.header.stamp.fromNSec(data);
+            publish_cloud.header.stamp = rclcpp::Time(data);
             publish_cloud.header.frame_id = "right_velodyne";
             velodyne_right_pub_.publish(publish_cloud);
 
@@ -718,7 +718,7 @@ void ROSThread::VelodyneRightThread()
       //load next data
       pcl::PointCloud<PointXYZIRT> cloud;
       cloud.clear();
-      sensor_msgs::PointCloud2 publish_cloud;
+      sensor_msgs::msg::PointCloud2 publish_cloud;
       current_file_index = find(next(velodyne_right_file_list_.begin(),max(0,previous_file_index-search_bound_)),velodyne_right_file_list_.end(),to_string(data)+".bin") - velodyne_right_file_list_.begin();
       if(find(next(velodyne_right_file_list_.begin(),max(0,previous_file_index-search_bound_)),velodyne_right_file_list_.end(),velodyne_right_file_list_[current_file_index+1]) != velodyne_right_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/VLP_right" +"/"+ velodyne_right_file_list_[current_file_index+1];
@@ -765,13 +765,13 @@ void ROSThread::LivoxAviaThread()
       //publish data
       if(to_string(data) + ".bin" == livox_avia_next_.first){
         //publish
-        livox_avia_next_.second.header.stamp.fromNSec(data);
+        livox_avia_next_.second.header.stamp = rclcpp::Time(data);
         livox_avia_next_.second.header.frame_id = "livox_avia";
         livox_avia_pub_.publish(livox_avia_next_.second);
       }else{
 //        cout << "Re-load right velodyne from path" << endl;
         //load current data
-        livox_ros_driver::CustomMsg livox_msg;
+        livox_ros_driver::msg::CustomMsg livox_msg;
         string current_file_name = data_folder_path_ + "/sensor_data/Livox_avia" +"/"+ to_string(data) + ".bin";
         int i = 0;
         if(1){
@@ -791,7 +791,7 @@ void ROSThread::LivoxAviaThread()
             }
             file.close();
             livox_msg.point_num = i;
-            livox_msg.header.stamp.fromNSec(data);
+            livox_msg.header.stamp = rclcpp::Time(data);
             livox_msg.header.frame_id = "livox_avia";
             livox_avia_pub_.publish(livox_msg);
 
@@ -800,7 +800,7 @@ void ROSThread::LivoxAviaThread()
       }
 
       //load next data
-      livox_ros_driver::CustomMsg livox_msg;
+      livox_ros_driver::msg::CustomMsg livox_msg;
       current_file_index = find(next(livox_avia_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_avia_file_list_.end(),to_string(data)+".bin") - livox_avia_file_list_.begin();
       if(find(next(livox_avia_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_avia_file_list_.end(),livox_avia_file_list_[current_file_index+1]) != livox_avia_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/Livox_avia" +"/"+ livox_avia_file_list_[current_file_index+1];
@@ -821,7 +821,7 @@ void ROSThread::LivoxAviaThread()
           }
           file.close();
           livox_msg.point_num = i;
-          livox_msg.header.stamp.fromNSec(data);
+          livox_msg.header.stamp = rclcpp::Time(data);
           livox_msg.header.frame_id = "livox_avia";
           livox_avia_next_ = make_pair(livox_avia_file_list_[current_file_index+1], livox_msg);
       }
@@ -850,12 +850,12 @@ void ROSThread::LivoxTeleThread()
       //publish data
       if(to_string(data) + ".bin" == livox_tele_next_.first){
         //publish
-        livox_tele_next_.second.header.stamp.fromNSec(data);
+        livox_tele_next_.second.header.stamp = rclcpp::Time(data);
         livox_tele_next_.second.header.frame_id = "livox_tele";
         livox_tele_pub_.publish(livox_tele_next_.second);
       }else{
         //load current data
-        livox_ros_driver::CustomMsg livox_msg;
+        livox_ros_driver::msg::CustomMsg livox_msg;
         string current_file_name = data_folder_path_ + "/sensor_data/Livox_tele" +"/"+ to_string(data) + ".bin";
         int i = 0;
         if(1){
@@ -875,7 +875,7 @@ void ROSThread::LivoxTeleThread()
             }
             file.close();
             livox_msg.point_num = i;
-            livox_msg.header.stamp.fromNSec(data);
+            livox_msg.header.stamp = rclcpp::Time(data);
             livox_msg.header.frame_id = "livox_tele";
             livox_tele_pub_.publish(livox_msg);
 
@@ -884,7 +884,7 @@ void ROSThread::LivoxTeleThread()
       }
 
       //load next data
-      livox_ros_driver::CustomMsg livox_msg;
+      livox_ros_driver::msg::CustomMsg livox_msg;
       current_file_index = find(next(livox_tele_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_tele_file_list_.end(),to_string(data)+".bin") - livox_tele_file_list_.begin();
       if(find(next(livox_tele_file_list_.begin(),max(0,previous_file_index-search_bound_)),livox_tele_file_list_.end(),livox_tele_file_list_[current_file_index+1]) != livox_tele_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/Livox_tele" +"/"+ livox_tele_file_list_[current_file_index+1];
@@ -905,7 +905,7 @@ void ROSThread::LivoxTeleThread()
           }
           file.close();
           livox_msg.point_num = i;
-          livox_msg.header.stamp.fromNSec(data);
+          livox_msg.header.stamp = rclcpp::Time(data);
           livox_msg.header.frame_id = "livox_tele";
           livox_tele_next_ = make_pair(livox_tele_file_list_[current_file_index+1], livox_msg);
       }
@@ -932,7 +932,7 @@ void ROSThread::OusterThread()
 
       if(to_string(data) + ".bin" == ouster_next_.first){
         //publish
-        ouster_next_.second.header.stamp.fromNSec(data);
+        ouster_next_.second.header.stamp = rclcpp::Time(data);
         ouster_next_.second.header.frame_id = "ouster";
         ouster_pub_.publish(ouster_next_.second);
 
@@ -941,7 +941,7 @@ void ROSThread::OusterThread()
         //load current data
         pcl::PointCloud<OusterPointXYZIRT> cloud;
         cloud.clear();
-        sensor_msgs::PointCloud2 publish_cloud;
+        sensor_msgs::msg::PointCloud2 publish_cloud;
         string current_file_name = data_folder_path_ + "/sensor_data/ouster" +"/"+ to_string(data) + ".bin";
 
         if(1){
@@ -961,7 +961,7 @@ void ROSThread::OusterThread()
             file.close();
 
             pcl::toROSMsg(cloud, publish_cloud);
-            publish_cloud.header.stamp.fromNSec(data);
+            publish_cloud.header.stamp = rclcpp::Time(data);
             publish_cloud.header.frame_id = "ouster";
             ouster_pub_.publish(publish_cloud);
 
@@ -971,7 +971,7 @@ void ROSThread::OusterThread()
       //load next data
       pcl::PointCloud<OusterPointXYZIRT> cloud;
       cloud.clear();
-      sensor_msgs::PointCloud2 publish_cloud;
+      sensor_msgs::msg::PointCloud2 publish_cloud;
       current_file_index = find(next(ouster_file_list_.begin(),max(0,previous_file_index-search_bound_)),ouster_file_list_.end(),to_string(data)+".bin") - ouster_file_list_.begin();
       if(find(next(ouster_file_list_.begin(),max(0,previous_file_index-search_bound_)),ouster_file_list_.end(),ouster_file_list_[current_file_index+1]) != ouster_file_list_.end()){
           string next_file_name = data_folder_path_ + "/sensor_data/ouster" +"/"+ ouster_file_list_[current_file_index+1];
@@ -1024,7 +1024,7 @@ int ROSThread::GetDirList(string dir, vector<string> &files)
     return 0;
 }
 
-void ROSThread::FilePlayerStart(const std_msgs::BoolConstPtr& msg)
+void ROSThread::FilePlayerStart(const std_msgs::msg::Bool::SharedPtr msg)
 {
   if(auto_start_flag_ == true){
     cout << "File player auto start" << endl;
@@ -1034,7 +1034,7 @@ void ROSThread::FilePlayerStart(const std_msgs::BoolConstPtr& msg)
   }
 }
 
-void ROSThread::FilePlayerStop(const std_msgs::BoolConstPtr& msg)
+void ROSThread::FilePlayerStop(const std_msgs::msg::Bool::SharedPtr msg)
 {
   cout << "File player auto stop" << endl;
   play_flag_ = true;
