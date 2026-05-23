@@ -186,7 +186,7 @@ City02/
 - [x] `MA_LIO/src/preprocess.*`: đã đổi kiểu `PointCloud2`, `Publisher`, `Time` sang ROS2 (`sensor_msgs::msg`, `rclcpp`).
 - [x] `MA_LIO/src/parameters.*`: đã đổi interface đọc param sang `rclcpp::Node` + `declare/get_parameter`.
 - [x] `MA_LIO/src/IMU_Processing.hpp`, `MA_LIO/include/common_lib.h`: đã đổi sang `sensor_msgs::msg::Imu::ConstSharedPtr`, bỏ include ROS1 `ros/ros.h` và `tf` trong header dùng chung; log runtime cũng đã đổi `ROS_INFO` -> `RCLCPP_INFO`.
-- [ ] `file_player/*`: đã chuyển bước 1 (Node init) ở `file_player/src/main.cpp`, `file_player/src/mainwindow.*` sang `rclcpp`; còn tồn đọng lớn trong `ROSThread.*`, `CMakeLists.txt`, `package.xml`, `dynamic_reconfigure`, `rosbag`, ROS1 message includes.
+- [x] `file_player/src/*.cpp`, `file_player/src/*.h`: đã rà soát và dọn logic ROS1 còn sót (gắn `RosInit` -> `ROSThread::ros_initialize`, bỏ include `rosbag/std_srvs` ROS1, đổi kiểu `irp_sen_msgs::imu` cũ sang `irp_sen_msgs::msg::Imu`).
 - [ ] Chốt chiến lược thay thế `livox_ros_driver/CustomMsg` ROS1.
 
 ---
@@ -270,3 +270,12 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 - [x] `file_player/src/ROSThread.h` đã dọn các include ROS1 chính.
 - [ ] Cần build xác nhận thực tế bằng `colcon build --packages-select file_player` trên máy có đủ toolchain ROS2; môi trường hiện tại thiếu lệnh `colcon` (`/bin/bash: colcon: command not found`).
 - [ ] Có thể còn lỗi compile runtime-level ở các file khác trong `file_player/src/*` (ngoài phạm vi sửa dependency lần này), cần vòng sửa tiếp theo sau khi có log build đầy đủ.
+
+
+## 15) Log tiến độ (2026-05-23 - Bước 4 file_player manual logic sweep)
+- ✅ Đã rà soát thủ công toàn bộ file `.cpp/.h` trong `file_player/src` và `file_player/include` (không có file header/source nào khác trong `include`).
+- ✅ `file_player/src/mainwindow.cpp`: `RosInit(...)` đã kết nối trực tiếp xuống `ROSThread::ros_initialize(...)` để hoàn tất luồng Node/Thread ROS2 runtime.
+- ✅ `file_player/src/mainwindow.h`: bỏ các include ROS1 không còn dùng (`rosbag/bag.h`, `std_srvs/SetBool.h`).
+- ✅ `file_player/src/ROSThread.cpp`: đổi nốt kiểu message cũ `irp_sen_msgs::imu` sang `irp_sen_msgs::msg::Imu` và cập nhật comment publisher tương ứng ROS2.
+- ✅ Kết luận module `file_player` (phạm vi source `.cpp/.h`) đã sạch ROS1 API còn sót.
+- ⚠️ Chưa thể chạy build xác nhận do môi trường hiện tại chưa có `colcon` như đã ghi nhận.

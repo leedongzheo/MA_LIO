@@ -107,8 +107,8 @@ void ROSThread::ros_initialize(const rclcpp::Node::SharedPtr &node)
   //inspva_pub_ = node_->advertise<novatel_gps_msgs::Inspva>("/inspva", 1000);
   //inspvax_pub_ = node_->advertise<novatel_oem7_msgs::INSPVAX>("/inspvax", 1000);
 
-  // imu_origin_pub_ = node_->advertise<irp_sen_msgs::imu>("/imu/data", 1000);
-  //imu_origin_pub_ = node_->advertise<irp_sen_msgs::imu>("/xsens_imu_data", 1000);
+  // imu_origin_pub_ = node_->create_publisher<irp_sen_msgs::msg::Imu>("/imu/data", 1000);
+  // imu_origin_pub_ = node_->create_publisher<irp_sen_msgs::msg::Imu>("/xsens_imu_data", 1000);
   imu_pub_ = node_->create_publisher<sensor_msgs::msg::Imu>("/xsens_imu_data", 1000);
   //magnet_pub_ = node_->advertise<sensor_msgs::msg::MagneticField>("/imu/mag", 1000);
 
@@ -245,7 +245,7 @@ void ROSThread::Ready()
   //Read IMU data
   fp = fopen((data_folder_path_+"/sensor_data/xsens_imu.csv").c_str(),"r");
   double q_x,q_y,q_z,q_w,x,y,z,g_x,g_y,g_z,a_x,a_y,a_z,m_x,m_y,m_z;
-  irp_sen_msgs::imu imu_data_origin;
+  irp_sen_msgs::msg::Imu imu_data_origin;
   sensor_msgs::msg::Imu imu_data;
   sensor_msgs::msg::MagneticField mag_data;
   imu_data_.clear();
