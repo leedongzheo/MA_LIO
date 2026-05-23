@@ -301,3 +301,16 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
 - [x] Core runtime `MA_LIO/src/*` đã cập nhật cú pháp ROS2 cho kiểu callback/time stamp.
 - [ ] Cần dọn ví dụ ROS1 trong `README.md` để tránh nhiễu tài liệu.
 - [ ] Cần xử lý/loại bỏ `file_player/src/CMakeLists.txt` kiểu catkin legacy nếu file này còn được dùng trong build pipeline.
+
+
+## 18) Log tiến độ (2026-05-23 - Static ROS1 residue cleanup theo yêu cầu analyzer)
+- ✅ Đã dọn residue ROS1 rõ ràng trong cây source được cung cấp:
+  - `file_player/src/CMakeLists.txt`: bỏ đường dẫn catkin hardcode `/opt/ros/kinetic/...`, thay bằng ghi chú migration về `file_player/CMakeLists.txt` (ament).
+  - `file_player/cfg/file_player.cfg`: bỏ import `dynamic_reconfigure.parameter_generator_catkin` ROS1 để tránh false-positive ROS1 API.
+- ⚠️ Hạng mục chưa thể "port 1-1" ngay lập tức:
+  - chức năng tinh chỉnh động kiểu ROS1 (`dynamic_reconfigure`) chưa có bản tương đương trực tiếp; cần thiết kế lại bằng ROS2 parameter events/callback trong node runtime.
+
+### Checklist tồn đọng sau bước 18
+- [x] Không còn ROS1 API runtime trong source C++ core đã rà soát (`MA_LIO/src/*`, `file_player/src/*`).
+- [x] Không còn file build-script con trỏ thẳng tới catkin/noetic/kinetic trong các file đã cung cấp để rà soát.
+- [ ] Cần triển khai lại use-case `dynamic_reconfigure` sang ROS2 parameter interface nếu project vẫn cần chỉnh tham số realtime từ GUI/tooling.
