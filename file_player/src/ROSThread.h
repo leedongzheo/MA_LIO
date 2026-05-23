@@ -29,34 +29,34 @@
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <rosgraph_msgs/msg/clock.hpp>
 
-#include <camera_info_manager/camera_info_manager.h>
+#include <camera_info_manager/camera_info_manager.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <std_msgs/msg/bool.hpp>
-#include <std_srvs/SetBool.h>
+#include <std_srvs/srv/set_bool.hpp>
 #include <std_msgs/msg/int64_multi_array.hpp>
 #include <std_msgs/msg/float32.hpp>
 #include <std_msgs/msg/float64.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
-#include <sensor_msgs/SetCameraInfo.h>
-#include <irp_sen_msgs/vrs.h>
-#include <irp_sen_msgs/altimeter.h>
-#include <irp_sen_msgs/encoder.h>
-#include <irp_sen_msgs/fog.h>
+#include <sensor_msgs/srv/set_camera_info.hpp>
+#include <irp_sen_msgs/msg/vrs.hpp>
+#include <irp_sen_msgs/msg/altimeter.hpp>
+#include <irp_sen_msgs/msg/encoder.hpp>
+#include <irp_sen_msgs/msg/fog.hpp>
 #include <irp_sen_msgs/msg/imu.hpp>
-#include <irp_sen_msgs/fog_3axis.h>
-#include <irp_sen_msgs/LaserScanArray.h>
+#include <irp_sen_msgs/msg/fog_3axis.hpp>
+#include <irp_sen_msgs/msg/laser_scan_array.hpp>
 
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/magnetic_field.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
-#include <tf/transform_datatypes.h>
 
 
-#include <dynamic_reconfigure/server.h>
-#include <file_player/dynamic_file_playerConfig.h>
+
+
+
 #include <Eigen/Dense>
 #include <thread>
 #include <mutex>
@@ -68,8 +68,8 @@
 #include <pcl/point_types.h>
 
 #include "file_player/color.h"
-#include "rosbag/bag.h"
-#include <ros/transport_hints.h>
+
+
 #include "file_player/datathread.h"
 #include <sys/types.h>
 
@@ -107,14 +107,14 @@ public:
 
 
 
-    boost::shared_ptr<camera_info_manager::CameraInfoManager> left_cinfo_;
-    boost::shared_ptr<camera_info_manager::CameraInfoManager> right_cinfo_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> left_cinfo_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> right_cinfo_;
 
-    boost::shared_ptr<camera_info_manager::CameraInfoManager> thermal_left_cinfo_;
-    boost::shared_ptr<camera_info_manager::CameraInfoManager> thermal_right_cinfo_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> thermal_left_cinfo_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> thermal_right_cinfo_;
 
-    boost::shared_ptr<camera_info_manager::CameraInfoManager> thermal_14bit_left_cinfo_;
-    boost::shared_ptr<camera_info_manager::CameraInfoManager> thermal_14bit_right_cinfo_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> thermal_14bit_left_cinfo_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> thermal_14bit_right_cinfo_;
 
     int64_t initial_data_stamp_;
     int64_t last_data_stamp_;

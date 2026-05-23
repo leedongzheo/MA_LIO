@@ -255,3 +255,18 @@ Các vị trí còn API ROS1 tập trung trong module `file_player`:
   - `dynamic_reconfigure` vẫn ROS1-only trong `ROSThread.h`.
   - include `rosbag/bag.h` và `camera_info_manager` vẫn ROS1 style.
   - `livox_ros_driver/msg/custom_msg.hpp` phụ thuộc package ROS2 tương ứng; nếu workspace chưa có bản ROS2 sẽ lỗi build.
+
+## 14) Log tiến độ (2026-05-23 - Bước 3 file_player build system + dọn ROS1 deps)
+- ✅ Đã chuyển `file_player/CMakeLists.txt` từ `catkin` sang `ament_cmake` (ROS2 Jazzy), khai báo dependencies ROS2 và cấu hình build Qt/PCL/OpenCV theo chuẩn ROS2.
+- ✅ Đã chuyển `file_player/package.xml` sang format `3` với `buildtool_depend=ament_cmake` và nhóm dependency ROS2 (`rclcpp`, `sensor_msgs`, `nav_msgs`, `pcl_conversions`, `irp_sen_msgs`, `livox_ros_driver`, ...).
+- ✅ Đã dọn thư viện ROS1 còn sót trong `file_player/src/ROSThread.h` (chỉ phần dependency/include):
+  - bỏ `dynamic_reconfigure`, `rosbag`, `ros/transport_hints`, `tf` ROS1 include.
+  - đổi include service/message sang ROS2 style (`std_srvs/srv/set_bool.hpp`, `sensor_msgs/srv/set_camera_info.hpp`, `irp_sen_msgs/msg/*.hpp`).
+  - đổi `boost::shared_ptr<camera_info_manager::CameraInfoManager>` -> `std::shared_ptr<camera_info_manager::CameraInfoManager>`.
+
+### Checklist tồn đọng sau Bước 3
+- [x] `file_player/CMakeLists.txt` đã sang ROS2 `ament_cmake`.
+- [x] `file_player/package.xml` đã sang ROS2 format 3.
+- [x] `file_player/src/ROSThread.h` đã dọn các include ROS1 chính.
+- [ ] Cần build xác nhận thực tế bằng `colcon build --packages-select file_player` trên máy có đủ toolchain ROS2; môi trường hiện tại thiếu lệnh `colcon` (`/bin/bash: colcon: command not found`).
+- [ ] Có thể còn lỗi compile runtime-level ở các file khác trong `file_player/src/*` (ngoài phạm vi sửa dependency lần này), cần vòng sửa tiếp theo sau khi có log build đầy đủ.
