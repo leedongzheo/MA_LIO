@@ -2,7 +2,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <pcl_conversions/pcl_conversions.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <livox_ros_driver2/msg/custom_msg.hpp>
 
 using namespace std;
@@ -65,7 +65,7 @@ class Preprocess
   void process(const livox_ros_driver2::msg::CustomMsg::SharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
   void process(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg, PointCloudXYZI::Ptr &pcl_out, int lidar);
 
-  // sensor_msgs::PointCloud2::ConstPtr pointcloud;
+  // Legacy ROS1 pointer alias removed: sensor_msgs::PointCloud2::ConstPtr.
   PointCloudXYZI pl_full, pl_corn, pl_surf;
   PointCloudXYZI pl_buff[128]; //maximum 128 line lidar
   float time_unit_scale;

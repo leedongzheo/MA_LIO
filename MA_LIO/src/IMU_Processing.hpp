@@ -113,7 +113,7 @@ ImuProcess::~ImuProcess() {}
 
 void ImuProcess::Reset()
 {
-  // ROS_WARN("Reset ImuProcess");
+  // Reset ImuProcess
   mean_acc = V3D(0, 0, -1.0);
   mean_gyr = V3D(0, 0, 0);
   angvel_last = Zero3d;
